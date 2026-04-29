@@ -8,7 +8,6 @@ import { createHashRouter, RouterProvider, Outlet, Navigate } from "react-router
 import MasterLayout from "./modules/SharedModule/MasterLayout/MasterLayout";
 import Home from "./modules/SharedModule/Home/Home.jsx";
 import ViewProperties from "./modules/PropertiesModule/ViewProperties/ViewProperties.jsx";
-import AddProperty from "./modules/PropertiesModule/AddProperty/AddProperty.jsx";
 import NotFound from "./modules/SharedModule/NotFound/NotFound.jsx";
 import EditProperty from "./modules/PropertiesModule/EditProperty/EditProperty.jsx";
 import DeleteProperty from "./modules/PropertiesModule/DeleteProperty/DeleteProperty.jsx";
@@ -19,11 +18,7 @@ import Overview from "./modules/UsersModule/RealEstateAgents/Overview/Overview.j
 import AgentPannel from "../src/modules/UsersModule/RealEstateAgents/AgentPannel/AgentPannel.jsx";
 import Join from "./modules/AuthModule/Join/Join.jsx";
 import PropertyLayout from "./modules/SharedModule/PropertyLayout/PropertyLayout.jsx";
-import PropertyMultiStepForm from "./modules/PropertiesModule/AddProperty/PropertyMultiStepForm.jsx"
-import Location from "./modules/PropertiesModule/AddProperty/Location.jsx"
-import AreaandDesc from "./modules/PropertiesModule/AddProperty/AreaandDesc.jsx"
-import PhotosandVideos from "./modules/PropertiesModule/AddProperty/PhotosandVideos.jsx"
-import PropertyReview from "./modules/PropertiesModule/AddProperty/PropertyReview.jsx"
+
 import PropertyDetails from "./modules/PropertiesModule/PropertyDetails/PropertyDetails.jsx";
 import HomeSeekerPannel from "./modules/UsersModule/HomeSeekers/HomeSeekerPannel/HomeSeekerPannel.jsx";
 import VisitRequestUser from "./modules/UsersModule/HomeSeekers/VisitRequestUser/VisitRequestUser.jsx";
@@ -38,12 +33,11 @@ import LogIn from '../src/modules/AuthModule/LogIn/LogIn.jsx';
 import SignUpNormal from '../src/modules/AuthModule/Join/SignUpNormal/SignUpNormal.jsx';
 import AgentSignUp from '../src/modules/AuthModule/Join/SignUpAgent/SignUpAgent.jsx';
 import AgentRightPanel from "./modules/UsersModule/RealEstateAgents/AgentRightPannel/AgentRightPannel.jsx";
-import UseAgentProfile from "./modules/UsersModule/RealEstateAgents/UseAgentProfile.js";
 import AgentProperties from "./modules/UsersModule/RealEstateAgents/AgentProperties/AgentProperties.jsx";
 import VisitRequests from "./modules/UsersModule/RealEstateAgents/VisitRequests/VisitRequests.jsx";
 import PurchaseRequests from "./modules/UsersModule/RealEstateAgents/PurchaseRequests/PurchaseRequests.jsx";
 import RentalRequests from "./modules/UsersModule/RealEstateAgents/RentalRequests/RentalRequests.jsx";
-
+import AddProperty from "./modules/UsersModule/RealEstateAgents/AddProperty/AddProperty.jsx";
 
 function App() {
   console.log('App component loaded');
@@ -70,6 +64,7 @@ function App() {
     { path: 'purchaserequests',   element: <PurchaseRequests />          },
     { path: 'rentrequests',       element: <RentalRequests />          },
     { path: 'rents',              element: <Rents />          },
+    { path: 'addproperty',              element: <AddProperty />          },
   ],
 },
     // 3. مسارات الـ Home Seeker (مستقلة تماماً)
@@ -118,11 +113,7 @@ function App() {
         { 
           path: "addproperty", 
           element: <AddProperty />,
-          children: [
-            { index: true, element: <PropertyMultiStepForm /> },
-            { path: "location", element: <Location /> },
-            { path: "areaanddescrp", element: <AreaandDesc /> },
-          ]
+        
         },
       ],
     },

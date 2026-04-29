@@ -1,10 +1,9 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Row, Col } from 'react-bootstrap';
+import { Row, Col } from 'react-bootstrap';
 import Search from '../../SharedModule/Search/Search.jsx';
 import useProperties from './useProperties.js';
-
-
+import '../../PropertiesModule/PropertyDetails.css'
 // ─── Constants ────────────────────────────────────────────────────────────────
 const BASE_IMG = 'https://realstate.niledevelopers.com';
 
@@ -35,16 +34,12 @@ const ImageSlider = ({ images, title }) => {
 
   return (
     <div className="card-img-wrapper">
-     
       <img
-  src={`${BASE_IMG}${images[current]}`}
-  alt={title}
-  loading="lazy"
-  decoding="async"
-/>
-
-      {/* Listing badge moved here — passed as prop from parent */}
-
+        src={`${BASE_IMG}${images[current]}`}
+        alt={title}
+        loading="lazy"
+        decoding="async"
+      />
       {images.length > 1 && <>
         <button className="slider-arrow left"  onClick={prev}><i className="fa-solid fa-chevron-left"  /></button>
         <button className="slider-arrow right" onClick={next}><i className="fa-solid fa-chevron-right" /></button>
@@ -63,29 +58,23 @@ const PropertyCard = ({ property, onView }) => {
 
   return (
     <div className="property-card" onClick={() => onView(property.id)}>
-
-      {/* ── Image Slider ── */}
       <div style={{ position: 'relative' }}>
         <ImageSlider images={images} title={property.title} />
-
-        {/* Listing Type Badge */}
         <span className={`badge-listing ${property.forRent ? 'badge-for-rent' : 'badge-for-sale'}`}>
           {property.forRent ? 'For Rent' : 'For Sale'}
         </span>
-
-        {/* Heart Button */}
         <button className="heart-btn" onClick={e => e.stopPropagation()}>
           <i className="fa-regular fa-heart" />
         </button>
       </div>
 
-      {/* ── Card Body ── */}
       <div className="p-3">
         <div className="property-price">
           {property.price?.toLocaleString()} SAR
-          {property.forRent && <span style={{ fontSize: '13px', fontWeight: 400, color: '#888' }}> /month</span>}
+          {property.forRent && (
+            <span style={{ fontSize: '13px', fontWeight: 400, color: '#888' }}> /month</span>
+          )}
         </div>
-
         <div className="d-flex align-items-center justify-content-between mb-1">
           <div className="property-location">
             <i className="fa-solid fa-location-dot" style={{ color: '#0088BD' }} />
@@ -93,7 +82,6 @@ const PropertyCard = ({ property, onView }) => {
           </div>
           <span className="property-type-badge">{property.realStatePurpose}</span>
         </div>
-
         <div className="property-specs">
           {property.bedrooms > 0 && (
             <span><i className="fa-solid fa-bed" /> {property.bedrooms}</span>
@@ -114,8 +102,13 @@ const PropertyCard = ({ property, onView }) => {
 export default function ViewProperties() {
 
   const { properties, loading, error, sendView } = useProperties();
-  const [viewMode, setViewMode] = useState('grid');
+  const [viewMode,     setViewMode]     = useState('grid');
+  const [listingType,  setListingType]  = useState('buy');
   const navigate = useNavigate();
+
+  const filteredProperties = properties.filter(p =>
+    listingType === 'buy' ? !p.forRent : p.forRent
+  );
 
   const handleViewProperty = useCallback((id) => {
     sendView(id);
@@ -123,21 +116,25 @@ export default function ViewProperties() {
   }, [sendView, navigate]);
 
   return (
-    <div className="p-4 p-lg-5">
-  {/* ── Search ── 
-  
-   <div className="mb-4">
-        <Search />
-      </div>
 
-  */}
+    <>
+    <div className="mb-5 search-container">
+        <Search
+          listingType={listingType}
+          onListingTypeChange={setListingType}
+        />
+      </div>
+  <div className="p-4 p-lg-5">
+
+      {/* ── Search ── */}
      
+      
 
       {/* ── Header ── */}
       <div className="vp-header d-flex align-items-start justify-content-between mb-2">
         <div>
           <h3>Featured Properties</h3>
-          <p>{properties.length} properties available</p>
+          <p>{filteredProperties.length} properties available</p>
         </div>
         <div className="d-flex gap-2">
           <button
@@ -157,7 +154,6 @@ export default function ViewProperties() {
         </div>
       </div>
 
-    
       {/* ── Error State ── */}
       {error && (
         <div className="alert alert-danger">
@@ -177,8 +173,8 @@ export default function ViewProperties() {
       {/* ── Grid View ── */}
       {!loading && !error && viewMode === 'grid' && (
         <Row className="g-4">
-          {properties.length > 0 ? (
-            properties.map(property => (
+          {filteredProperties.length > 0 ? (
+            filteredProperties.map(property => (
               <Col key={property.id} md={4}>
                 <PropertyCard property={property} onView={handleViewProperty} />
               </Col>
@@ -186,7 +182,9 @@ export default function ViewProperties() {
           ) : (
             <div className="empty-state">
               <i className="fa-solid fa-house-circle-xmark" />
-              <p>No properties found</p>
+              <p>
+                No {listingType === 'buy' ? 'properties for sale' : 'properties for rent'} found
+              </p>
             </div>
           )}
         </Row>
@@ -201,5 +199,8 @@ export default function ViewProperties() {
       )}
 
     </div>
+
+    </>
+  
   );
 }

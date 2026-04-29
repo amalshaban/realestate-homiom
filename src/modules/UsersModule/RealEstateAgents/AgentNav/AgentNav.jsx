@@ -13,8 +13,9 @@ const NAV_LINKS = [
   { label: 'Concierge',   to: '/agentlayout/concierge'   },
 ];
 
+
 // ─── Main Component ───────────────────────────────────────────────────────────
-export default function AgentNav() {
+export default function AgentNav({onMenuClick}) {
 
   const { loginData } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -24,7 +25,13 @@ export default function AgentNav() {
 
   return (
     <nav className="agent-nav">
-
+<button
+  className="d-md-none me-3"
+  style={{ background: 'none', border: 'none', fontSize: '20px', color: '#0b0d2a' }}
+  onClick={onMenuClick}
+>
+  <i className="fa-solid fa-bars" />
+</button>
       {/* ── Brand ── */}
       <Link to="/agentlayout/overview" className="agent-nav-brand">
         Homiom

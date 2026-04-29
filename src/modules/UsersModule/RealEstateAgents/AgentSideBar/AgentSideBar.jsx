@@ -14,8 +14,10 @@ const SIDEBAR_LINKS = [
   { label: 'Rent Requests',     to: '/agentpannel/rentrequests',      icon: 'fa-solid fa-file-contract'   },
   { label: 'Rents',             to: '/agentpannel/rents',             icon: 'fa-solid fa-key'             },
 ];
+
+
 // ─── Main Component ───────────────────────────────────────────────────────────
-export default function AgentSidebar() {
+export default function AgentSidebar({onClose}) {
   const { logOut } = useContext(AuthContext);
 const navigate   = useNavigate();
 
@@ -25,6 +27,14 @@ const handleLogout = () => {
 };
   return (
     <div className="agent-sidebar">
+<div className="d-md-none d-flex justify-content-end mb-2">
+  <button
+    style={{ background: 'none', border: 'none', fontSize: '20px', color: '#888' }}
+    onClick={onClose}
+  >
+    <i className="fa-solid fa-xmark" />
+  </button>
+</div>
 
       {/* ── Header ── */}
       <div>

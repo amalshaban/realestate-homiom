@@ -52,7 +52,7 @@ export default function Home() {
            <h1 className="hero-title fw-bold mb-3">Find Your Dream Home in Saudi Arabia</h1>
            <p className="hero-subtitle ">The Kingdom's Leading Real Estate Platform</p>
           </div>
-      <Search/>      
+     
   </div>
     </div>  
 

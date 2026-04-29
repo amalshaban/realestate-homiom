@@ -1,6 +1,6 @@
 
 import React from 'react';
- import UseAgentProfile from "../UseAgentProfile.js";
+ import {useAgentProfile} from "../useAgentData.js";
 import '../../RealEstateAgents/AgentPannel.css';
 
 
@@ -8,7 +8,7 @@ const BASE_IMG = 'https://realstate.niledevelopers.com/images/';
 
 export default function AgentRightPanel() {
 
-  const { profile, loading, error } = UseAgentProfile();
+  const { profile, loading, error } = useAgentProfile();
 
   if (loading) return (
     <div className="agent-right-panel">

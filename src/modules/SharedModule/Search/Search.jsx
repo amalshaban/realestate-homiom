@@ -1,96 +1,101 @@
 import React, { useState, useEffect } from 'react';
 import { Authorization } from '../../../constants/Validations';
-import { LOCATIONS_URLs, PROPERTIES_URLS } from '../../../constants/EndPoints';
+import { LOCATIONS_URLs } from '../../../constants/EndPoints';
 import axios from 'axios';
 
+export default function Search({ listingType, onListingTypeChange, onSearch }) {
 
-export default function Search() {
-    const [myData, setMyData] = useState([]);
-    const [activeTab, setActiveTab] = useState('buy'); // Logic للتبديل بين Buy و Rent
+  const [countries, setCountries] = useState([]);
+  const [country,   setCountry]   = useState('');
+  const [type,      setType]      = useState('');
+  const [price,     setPrice]     = useState('');
 
-    const getmydata = async () => {
-        try {
-            let response = await axios.get(LOCATIONS_URLs.Countries, Authorization);
-            setMyData(response.data);
-        } catch (error) {
-            console.error('Error:', error.response?.data || error.message);
-        }
-    }
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const response = await axios.get(LOCATIONS_URLs.Countries, Authorization);
+        setCountries(response.data);
+      } catch {}
+    };
+    fetchCountries();
+  }, []);
 
-    useEffect(() => {
-        getmydata();
-    }, []);
+  const handleSearch = (e) => {
+    e.preventDefault();
+    onSearch?.({ country, type, price, listingType });
+  };
 
+  return (
+    <div className="container mt-5">
+      <div className="search-container">
 
-    return (
-        <div className="container mt-5">
-            <div className="search-container">
-                {/* Buy / Rent Tabs */}
-                <div className="toggle-container">
-                    <button 
-                        className={`toggle-btn ${activeTab === 'buy' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('buy')}
-                    >
-                        Buy
-                    </button>
-                    <button 
-                        className={`toggle-btn ${activeTab === 'rent' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('rent')}
-                    >
-                        Rent
-                    </button>
-                </div>
-
-                {/* Form Row */}
-                <form>
-                    <div className="row g-1  align-items-center">
-                        <div className="col-lg-4 col-md-6">
-                            <div className="search-box-wrapper ">
-                                {/* <i className="fa-solid fa-magnifying-glass"></i> */}
-                                <select className="form-select border-0  bg-transparent">
-                                    <option value="" selected disabled>Select Country</option>
-                                    {myData.map((country) => (
-                                        <option key={country.id} value={country.id}>
-                                            {country.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* Property Type */}
-                        <div className="col-lg-3 col-md-6">
-                            <div className="search-box-wrapper">
-                                <select className="form-select border-0 bg-transparent">
-                                    <option value="" selected>Any Type</option>
-                                    <option value="1">Apartment</option>
-                                    <option value="2">Villa</option>
-                                    <option value="2">Compound</option>
-                                    <option value="2">Land</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* Price Range */}
-                        <div className="col-lg-3 col-md-6">
-                            <div className="search-box-wrapper">
-                                <select className="form-select border-0 bg-transparent">
-                                    <option value="" selected>Any Price</option>
-                                    <option value="1">$1000 - $5000</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* Search Button */}
-                        <div className="col-lg-2 col-md-6">
-                            <button type="submit" className="btn-search-main">
-                                <i className="fa-solid fa-magnifying-glass"></i>
-                                Search
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
+        {/* ── Buy / Rent Toggle ── */}
+        <div className="toggle-container">
+          <button
+            className={`toggle-btn ${listingType === 'buy' ? 'active' : ''}`}
+            onClick={() => onListingTypeChange('buy')}
+          >
+            Buy
+          </button>
+          <button
+            className={`toggle-btn ${listingType === 'rent' ? 'active' : ''}`}
+            onClick={() => onListingTypeChange('rent')}
+          >
+            Rent
+          </button>
         </div>
-    );
+
+        {/* ── Form ── */}
+        <form onSubmit={handleSearch}>
+          <div className="row g-1 align-items-center">
+
+            <div className="col-lg-4 col-md-6">
+              <div className="search-box-wrapper">
+                <select className="form-select border-0 bg-transparent"
+                  value={country} onChange={e => setCountry(e.target.value)}>
+                  <option value="" disabled>Select Country</option>
+                  {countries.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="col-lg-3 col-md-6">
+              <div className="search-box-wrapper">
+                <select className="form-select border-0 bg-transparent"
+                  value={type} onChange={e => setType(e.target.value)}>
+                  <option value="">Any Type</option>
+                  <option value="1">Apartment</option>
+                  <option value="2">Villa</option>
+                  <option value="3">Compound</option>
+                  <option value="4">Land</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="col-lg-3 col-md-6">
+              <div className="search-box-wrapper">
+                <select className="form-select border-0 bg-transparent"
+                  value={price} onChange={e => setPrice(e.target.value)}>
+                  <option value="">Any Price</option>
+                  <option value="1000-5000">1,000 - 5,000 SAR</option>
+                  <option value="5000-10000">5,000 - 10,000 SAR</option>
+                  <option value="10000-50000">10,000 - 50,000 SAR</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="col-lg-2 col-md-6">
+              <button type="submit" className="btn-search-main">
+                <i className="fa-solid fa-magnifying-glass" />
+                Search
+              </button>
+            </div>
+
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }

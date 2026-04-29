@@ -1,15 +1,15 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Row, Col } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import axios from 'axios';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import useAddProperty from '../useAddProperty.js';
+import { apiKey } from '../../../../constants/Validations.js';
 import '../../RealEstateAgents/AgentPannel.css';
-
 
 // ─── Fix Leaflet default icon ──────────────────────────────────────────────────
 delete L.Icon.Default.prototype._getIconUrl;
@@ -21,22 +21,22 @@ L.Icon.Default.mergeOptions({
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const AMENITIES = [
-  { id: 1, label: 'Private Pool',  icon: 'fa-solid fa-water-ladder'   },
-  { id: 2, label: 'Elevator',      icon: 'fa-solid fa-elevator'        },
-  { id: 3, label: 'Driver Room',   icon: 'fa-solid fa-car'             },
-  { id: 4, label: 'Roof Deck',     icon: 'fa-solid fa-building'        },
-  { id: 5, label: 'Gym',           icon: 'fa-solid fa-dumbbell'        },
-  { id: 6, label: 'Parking',       icon: 'fa-solid fa-square-parking'  },
-  { id: 7, label: 'Garden',        icon: 'fa-solid fa-tree'            },
+  { id: 1, label: 'Private Pool',  icon: 'fa-solid fa-water-ladder'  },
+  { id: 2, label: 'Elevator',      icon: 'fa-solid fa-elevator'       },
+  { id: 3, label: 'Driver Room',   icon: 'fa-solid fa-car'            },
+  { id: 4, label: 'Roof Deck',     icon: 'fa-solid fa-building'       },
+  { id: 5, label: 'Gym',           icon: 'fa-solid fa-dumbbell'       },
+  { id: 6, label: 'Parking',       icon: 'fa-solid fa-square-parking' },
+  { id: 7, label: 'Garden',        icon: 'fa-solid fa-tree'           },
 ];
 
-const DEFAULT_CENTER = [24.7136, 46.6753]; // Riyadh
+const DEFAULT_CENTER = [24.7136, 46.6753];
 
 // ─── Map Click Handler ────────────────────────────────────────────────────────
 const MapClickHandler = ({ onLocationSelect }) => {
   useMapEvents({
     click(e) {
-      onLocationSelect([e.latlng.lat, e.latlng.lng]);
+      onLocationSelect(e.latlng.lat, e.latlng.lng);
     },
   });
   return null;
@@ -63,15 +63,17 @@ export default function AddProperty() {
     fetchCities, fetchDistricts, submitProperty,
   } = useAddProperty();
 
-  const [markerPos,         setMarkerPos]         = useState(null);
-  const [bedrooms,          setBedrooms]           = useState(0);
-  const [bathrooms,         setBathrooms]          = useState(0);
-  const [selectedAmenities, setSelectedAmenities]  = useState([]);
-  const [ejarEnabled,       setEjarEnabled]        = useState(true);
+  const [markerPos,          setMarkerPos]          = useState(null);
+  const [bedrooms,           setBedrooms]            = useState(0);
+  const [bathrooms,          setBathrooms]           = useState(0);
+  const [selectedAmenities,  setSelectedAmenities]   = useState([]);
+  const [ejarEnabled,        setEjarEnabled]         = useState(true);
+  const [images,             setImages]              = useState([]);
+  const [imagePreviews,      setImagePreviews]       = useState([]);
   const navigate = useNavigate();
 
   const {
-    register, handleSubmit, watch, control,
+    register, handleSubmit, watch, control, setValue,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -93,20 +95,111 @@ export default function AddProperty() {
   useEffect(() => { fetchCities(watchedCountryId);   }, [watchedCountryId, fetchCities]);
   useEffect(() => { fetchDistricts(watchedCityId);   }, [watchedCityId,    fetchDistricts]);
 
-  const handleUseCurrentLocation = useCallback(() => {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setMarkerPos([pos.coords.latitude, pos.coords.longitude]),
-      () => toast.error('Could not get your location')
-    );
+  // ── Reverse Geocoding ──
+  const reverseGeocode = useCallback(async (lat, lng) => {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=en`
+      );
+      const data = await res.json();
+      return {
+        country:  data.address?.country || '',
+        city:     data.address?.city || data.address?.town || data.address?.state || '',
+        district: data.address?.suburb || data.address?.district || data.address?.neighbourhood || '',
+      };
+    } catch {
+      return null;
+    }
   }, []);
 
+  // ── Map Click ──
+  const handleMapClick = useCallback(async (lat, lng) => {
+    setMarkerPos([lat, lng]);
+    const location = await reverseGeocode(lat, lng);
+    if (!location) return;
+
+    const matchedCountry = countries.find(c =>
+      c.name.toLowerCase().includes(location.country.toLowerCase()) ||
+      location.country.toLowerCase().includes(c.name.toLowerCase())
+    );
+
+    if (matchedCountry) {
+      setValue('countryId', String(matchedCountry.id));
+      await fetchCities(matchedCountry.id);
+
+      setTimeout(async () => {
+        const cityRes = await axios.get(
+          `https://realstate.niledevelopers.com/Locations/Cities?id=${matchedCountry.id}`,
+          { headers: { Authorization: `Bearer ${sessionStorage.token}`, apiKey } }
+        );
+        const citiesList = cityRes.data || [];
+        const matchedCity = citiesList.find(c =>
+          c.name.toLowerCase().includes(location.city.toLowerCase()) ||
+          location.city.toLowerCase().includes(c.name.toLowerCase())
+        );
+
+        if (matchedCity) {
+          setValue('cityId', String(matchedCity.id));
+          await fetchDistricts(matchedCity.id);
+
+          setTimeout(async () => {
+            const distRes = await axios.get(
+              `https://realstate.niledevelopers.com/Locations/Districts?id=${matchedCity.id}`,
+              { headers: { Authorization: `Bearer ${sessionStorage.token}`, apiKey } }
+            );
+            const districtsList = distRes.data || [];
+            const matchedDistrict = districtsList.find(d =>
+              d.name.toLowerCase().includes(location.district.toLowerCase()) ||
+              location.district.toLowerCase().includes(d.name.toLowerCase())
+            );
+            if (matchedDistrict) {
+              setValue('districtId', String(matchedDistrict.id));
+            }
+          }, 500);
+        }
+      }, 500);
+    }
+
+    setValue('locationDescription', `${location.district}, ${location.city}, ${location.country}`);
+  }, [countries, fetchCities, fetchDistricts, reverseGeocode, setValue]);
+
+  // ── Current Location ──
+  const handleUseCurrentLocation = useCallback(() => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => handleMapClick(pos.coords.latitude, pos.coords.longitude),
+      () => toast.error('Could not get your location')
+    );
+  }, [handleMapClick]);
+
+  // ── Image Handlers ──
+  const handleImages = useCallback((e) => {
+    const files = Array.from(e.target.files);
+    setImages(prev => [...prev, ...files]);
+    const previews = files.map(f => URL.createObjectURL(f));
+    setImagePreviews(prev => [...prev, ...previews]);
+  }, []);
+
+  const removeImage = useCallback((idx) => {
+    setImages(prev => prev.filter((_, i) => i !== idx));
+    setImagePreviews(prev => {
+      URL.revokeObjectURL(prev[idx]);
+      return prev.filter((_, i) => i !== idx);
+    });
+  }, []);
+
+  // ── Amenities ──
   const toggleAmenity = useCallback((id) => {
     setSelectedAmenities(prev =>
       prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]
     );
   }, []);
 
+  // ── Submit ──
   const onSubmit = useCallback(async (data) => {
+    if (images.length === 0) {
+      toast.error('Please add at least one image');
+      return;
+    }
     const toastId = toast.loading('Adding property...');
     const success = await submitProperty({
       ...data,
@@ -114,7 +207,7 @@ export default function AddProperty() {
       bathrooms,
       locationLat: markerPos?.[0] || '',
       locationLng: markerPos?.[1] || '',
-    }, []);
+    }, images);
 
     if (success) {
       toast.update(toastId, {
@@ -132,7 +225,7 @@ export default function AddProperty() {
         autoClose: 3000,
       });
     }
-  }, [bedrooms, bathrooms, markerPos, submitProperty, error, navigate]);
+  }, [images, bedrooms, bathrooms, markerPos, submitProperty, error, navigate]);
 
   return (
     <div className="add-prop-page">
@@ -145,43 +238,35 @@ export default function AddProperty() {
           <h2 className="add-prop-title">Property Foundation</h2>
           <p className="add-prop-subtitle">Provide the core technical details for your Riyadh-based listing.</p>
 
-        
+          <Row className="g-2 align-items-center">
+            <Col md={6}>
+              <label className="add-prop-label">Property Type</label>
+              <select className={`add-prop-input ${errors.realStateTypeId ? 'is-invalid' : ''}`}
+                {...register('realStateTypeId', { validate: v => v !== '0' || 'Required' })}>
+                <option value="0">Select Type</option>
+                {realStateTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+              {errors.realStateTypeId && <p className="add-prop-error-text">{errors.realStateTypeId.message}</p>}
+            </Col>
 
-<Row className="g-2">
-  <Col md={6}>
-    <label className="add-prop-label">Property Type</label>
-    <select className={`add-prop-input ${errors.realStateTypeId ? 'is-invalid' : ''}`}
-      {...register('realStateTypeId', { validate: v => v !== '0' || 'Required' })}>
-      <option value="0">Select Type</option>
-      {realStateTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-    </select>
-    {errors.realStateTypeId && <p className="add-prop-error-text">{errors.realStateTypeId.message}</p>}
-  </Col>
+            <Col md={6}>
+              <label className="add-prop-label">Listing Category</label>
+              <Controller
+                name="forRent"
+                control={control}
+                render={({ field }) => (
+                  <div className="add-prop-toggle">
+                    <button type="button"
+                      className={`add-prop-toggle-btn ${!field.value ? 'active' : ''}`}
+                      onClick={() => field.onChange(false)}>For Sale</button>
+                    <button type="button"
+                      className={`add-prop-toggle-btn ${field.value ? 'active' : ''}`}
+                      onClick={() => field.onChange(true)}>For Rent</button>
+                  </div>
+                )}
+              />
+            </Col>
 
-  <Col md={6}>
-    <label className="add-prop-label">Listing Category</label>
-    <Controller
-      name="forRent"
-      control={control}
-      render={({ field }) => (
-        <div className="add-prop-toggle">
-          <button type="button"
-            className={`add-prop-toggle-btn ${!field.value ? 'active' : ''}`}
-            onClick={() => field.onChange(false)}>
-            For Sale
-          </button>
-          <button type="button"
-            className={`add-prop-toggle-btn ${field.value ? 'active' : ''}`}
-            onClick={() => field.onChange(true)}>
-            For Rent
-          </button>
-        </div>
-      )}
-    />
-  </Col>
-
-
-            {/* Rent Type — only if forRent */}
             {watchedForRent && (
               <Col md={6}>
                 <label className="add-prop-label">Rent Type</label>
@@ -192,8 +277,6 @@ export default function AddProperty() {
               </Col>
             )}
 
-
-    {/* Purpose */}
             <Col md={watchedForRent ? 6 : 12}>
               <label className="add-prop-label">Purpose</label>
               <select className={`add-prop-input ${errors.realStatePurposeId ? 'is-invalid' : ''}`}
@@ -203,9 +286,7 @@ export default function AddProperty() {
               </select>
               {errors.realStatePurposeId && <p className="add-prop-error-text">{errors.realStatePurposeId.message}</p>}
             </Col>
-</Row>
-
-
+          </Row>
 
           {/* Broker Compliance Box */}
           <div className="add-prop-broker-box">
@@ -255,7 +336,6 @@ export default function AddProperty() {
             </button>
           </div>
 
-          {/* Map */}
           <div className="add-prop-map-wrapper">
             <MapContainer
               center={markerPos || DEFAULT_CENTER}
@@ -266,12 +346,11 @@ export default function AddProperty() {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution='&copy; OpenStreetMap contributors'
               />
-              <MapClickHandler onLocationSelect={setMarkerPos} />
+              <MapClickHandler onLocationSelect={handleMapClick} />
               {markerPos && <Marker position={markerPos} />}
             </MapContainer>
           </div>
 
-          {/* Location Dropdowns */}
           <Row className="g-2 mt-2">
             <Col md={4}>
               <label className="add-prop-label">Country</label>
@@ -324,7 +403,8 @@ export default function AddProperty() {
             <Col md={6}>
               <label className="add-prop-label">Asking Price (SAR)</label>
               <div className="add-prop-price-wrapper">
-                <input type="number" className={`add-prop-input ${errors.price ? 'is-invalid' : ''}`}
+                <input type="number"
+                  className={`add-prop-input ${errors.price ? 'is-invalid' : ''}`}
                   placeholder="3,250,000"
                   {...register('price', { required: 'Price is required', min: 1 })} />
                 <span className="add-prop-price-unit">SAR</span>
@@ -424,6 +504,47 @@ export default function AddProperty() {
         </div>
 
         {/* ══════════════════════════════════════
+            Section 5 — Property Images
+        ══════════════════════════════════════ */}
+        <div className="add-prop-section">
+          <h2 className="add-prop-title">Property Images</h2>
+          <p className="add-prop-subtitle">Add at least one image for your listing.</p>
+
+          {/* Upload Area */}
+          <label className="add-prop-image-upload" htmlFor="property-images">
+            <i className="fa-solid fa-cloud-arrow-up" />
+            <p>Click to upload images</p>
+            <span>PNG, JPG up to 10MB each</span>
+            <input
+              id="property-images"
+              type="file"
+              multiple
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleImages}
+            />
+          </label>
+
+          {/* Previews */}
+          {imagePreviews.length > 0 && (
+            <div className="add-prop-image-preview">
+              {imagePreviews.map((src, idx) => (
+                <div key={idx} className="add-prop-image-thumb">
+                  <img src={src} alt={`preview-${idx}`} />
+                  <button
+                    type="button"
+                    className="add-prop-image-thumb-remove"
+                    onClick={() => removeImage(idx)}
+                  >
+                    <i className="fa-solid fa-xmark" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ══════════════════════════════════════
             Footer
         ══════════════════════════════════════ */}
         <div className="add-prop-footer">
@@ -434,7 +555,7 @@ export default function AddProperty() {
           <button type="submit" className="add-prop-submit-btn" disabled={submitting}>
             {submitting
               ? <><span className="spinner-border spinner-border-sm" /> Adding...</>
-              : <>Continue to Media <i className="fa-solid fa-arrow-right" /></>
+              : <>Submit Property <i className="fa-solid fa-check" /></>
             }
           </button>
         </div>

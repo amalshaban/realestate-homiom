@@ -25,6 +25,7 @@ const handleLogout = () => {
   logOut();
   navigate('/home');
 };
+
   return (
     <div className="agent-sidebar">
 <div className="d-md-none d-flex justify-content-end mb-2">

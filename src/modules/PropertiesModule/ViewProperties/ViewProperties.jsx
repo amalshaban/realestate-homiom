@@ -1,9 +1,9 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Row, Col } from 'react-bootstrap';
-import Search from '../../SharedModule/Search/Search.jsx';
 import useProperties from './useProperties.js';
-import '../../PropertiesModule/PropertyDetails.css'
+import '../../PropertiesModule/PropertyDetails.css';
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 const BASE_IMG = 'https://realstate.niledevelopers.com';
 
@@ -41,8 +41,12 @@ const ImageSlider = ({ images, title }) => {
         decoding="async"
       />
       {images.length > 1 && <>
-        <button className="slider-arrow left"  onClick={prev}><i className="fa-solid fa-chevron-left"  /></button>
-        <button className="slider-arrow right" onClick={next}><i className="fa-solid fa-chevron-right" /></button>
+        <button className="slider-arrow left"  onClick={prev}>
+          <i className="fa-solid fa-chevron-left" />
+        </button>
+        <button className="slider-arrow right" onClick={next}>
+          <i className="fa-solid fa-chevron-right" />
+        </button>
         <div className="slider-dots">
           {images.map((_, i) => (
             <div key={i} className={`slider-dot ${i === current ? 'active' : ''}`} />
@@ -101,14 +105,9 @@ const PropertyCard = ({ property, onView }) => {
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function ViewProperties() {
 
-  const { properties, loading, error, sendView } = useProperties();
-  const [viewMode,     setViewMode]     = useState('grid');
-  const [listingType,  setListingType]  = useState('buy');
+  const { properties, loading, error, loadingMore, hasMore, total, loadMore, sendView } = useProperties();
+  const [viewMode, setViewMode] = useState('grid');
   const navigate = useNavigate();
-
-  const filteredProperties = properties.filter(p =>
-    listingType === 'buy' ? !p.forRent : p.forRent
-  );
 
   const handleViewProperty = useCallback((id) => {
     sendView(id);
@@ -116,25 +115,13 @@ export default function ViewProperties() {
   }, [sendView, navigate]);
 
   return (
-
-    <>
-    <div className="mb-5 search-container">
-        <Search
-          listingType={listingType}
-          onListingTypeChange={setListingType}
-        />
-      </div>
-  <div className="p-4 p-lg-5">
-
-      {/* ── Search ── */}
-     
-      
+    <div className="p-4 p-lg-5">
 
       {/* ── Header ── */}
-      <div className="vp-header d-flex align-items-start justify-content-between mb-2">
+      <div className="vp-header d-flex align-items-start justify-content-between mb-4">
         <div>
           <h3>Featured Properties</h3>
-          <p>{filteredProperties.length} properties available</p>
+          <p>{total} properties available</p>
         </div>
         <div className="d-flex gap-2">
           <button
@@ -154,14 +141,14 @@ export default function ViewProperties() {
         </div>
       </div>
 
-      {/* ── Error State ── */}
+      {/* ── Error ── */}
       {error && (
         <div className="alert alert-danger">
           Failed to load properties. Please try again.
         </div>
       )}
 
-      {/* ── Loading State ── */}
+      {/* ── Loading ── */}
       {loading && (
         <Row className="g-4">
           {[1, 2, 3, 4, 5, 6].map(i => (
@@ -173,8 +160,8 @@ export default function ViewProperties() {
       {/* ── Grid View ── */}
       {!loading && !error && viewMode === 'grid' && (
         <Row className="g-4">
-          {filteredProperties.length > 0 ? (
-            filteredProperties.map(property => (
+          {properties.length > 0 ? (
+            properties.map(property => (
               <Col key={property.id} md={4}>
                 <PropertyCard property={property} onView={handleViewProperty} />
               </Col>
@@ -182,10 +169,24 @@ export default function ViewProperties() {
           ) : (
             <div className="empty-state">
               <i className="fa-solid fa-house-circle-xmark" />
-              <p>
-                No {listingType === 'buy' ? 'properties for sale' : 'properties for rent'} found
-              </p>
+              <p>No properties found</p>
             </div>
+          )}
+
+          {/* ── Load More ── */}
+          {hasMore && (
+            <Col xs={12} className="text-center mt-4">
+              <button
+                className="btn btn-outline-dark px-5 py-2 rounded-pill"
+                onClick={loadMore}
+                disabled={loadingMore}
+              >
+                {loadingMore
+                  ? <><span className="spinner-border spinner-border-sm me-2" />Loading...</>
+                  : 'Load More Properties'
+                }
+              </button>
+            </Col>
           )}
         </Row>
       )}
@@ -199,8 +200,5 @@ export default function ViewProperties() {
       )}
 
     </div>
-
-    </>
-  
   );
 }

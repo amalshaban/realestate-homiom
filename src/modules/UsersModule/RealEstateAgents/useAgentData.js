@@ -42,27 +42,53 @@ export function useAgentStats() {
 // ─── useAgentProfile ──────────────────────────────────────────────────────────
 export function useAgentProfile() {
 
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState(null);
+  const [profile,  setProfile]  = useState(null);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState(null);
+  const [updating, setUpdating] = useState(false);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await axios.get(`${BASE_URL}/Agent/Profile`, {
-          headers: headers(),
-        });
-        setProfile(response.data);
-      } catch (err) {
-        setError(err.response?.data || err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProfile();
+  const fetchProfile = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${BASE_URL}/Agent/Profile`, {
+        headers: headers(),
+      });
+      setProfile(response.data);
+    } catch (err) {
+      setError(err.response?.data || err.message);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return { profile, loading, error };
+  const updateProfile = useCallback(async (data, photo) => {
+    setUpdating(true);
+    try {
+      const formData = new FormData();
+      formData.append('id',     data.id);
+      formData.append('nameAr', data.nameAr);
+      formData.append('nameEn', data.nameEn);
+      if (photo) formData.append('photo', photo);
+
+      await axios.put(`${BASE_URL}/agent/group/update`, formData, {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.token}`,
+          apiKey,
+        },
+      });
+      await fetchProfile();
+      return true;
+    } catch {
+      return false;
+    } finally {
+      setUpdating(false);
+    }
+  }, [fetchProfile]);
+
+  useEffect(() => { fetchProfile(); }, [fetchProfile]);
+
+  return { profile, loading, error, updating, updateProfile };
 }
 
 // ─── useAgentProperties ───────────────────────────────────────────────────────

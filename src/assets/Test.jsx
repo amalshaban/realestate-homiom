@@ -9,7 +9,7 @@ export default function test() {
 
     const getmydata = async () => {
         try {
-            let response = await axios.get("https://realstate.niledevelopers.com/Agent/properties/{60}",AuthorizedToken);
+            let response = await axios.get("https://realstate.niledevelopers.com/Agent/Profile",AuthorizedToken);
             console.log(response.data);
         
         } catch (error) {

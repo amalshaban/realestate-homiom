@@ -173,7 +173,9 @@ export default function NavBar() {
                   <Dropdown.Item onClick={handleDashboard}>
                     {role === 'Agent' ? 'Agent Dashboard' : 'My Home'}
                   </Dropdown.Item>
-                  <Dropdown.Item onClick={() => navigate('/profile')}>
+
+            
+                  <Dropdown.Item onClick={() => navigate('/agentpannel/profile')}>
                     Profile Settings
                   </Dropdown.Item>
                   <Dropdown.Divider />

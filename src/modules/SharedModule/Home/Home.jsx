@@ -1,6 +1,6 @@
 import React, {   useState } from "react";
 import { Link, Outlet } from "react-router-dom";
-import Search from "../Search/Search.jsx";
+import Search from '../../SharedModule/Search/Search.jsx';
 // import cardimg from "../../../assets/imgs/7da51552e8fc95cb3bd8bf2bf2d6ce580258031a.jpg";
 import UserLocation from "../../../../public/userLocation/UserLocation.jsx";
 import Services from "../Services/Services.jsx";
@@ -52,7 +52,7 @@ export default function Home() {
            <h1 className="hero-title fw-bold mb-3">Find Your Dream Home in Saudi Arabia</h1>
            <p className="hero-subtitle ">The Kingdom's Leading Real Estate Platform</p>
           </div>
-     
+     <Search />
   </div>
     </div>  
 

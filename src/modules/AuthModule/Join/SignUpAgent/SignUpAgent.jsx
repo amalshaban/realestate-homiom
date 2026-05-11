@@ -6,7 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Row, Col } from 'react-bootstrap';
 import { USERS_URLs } from '../../../../constants/EndPoints';
 import { apiKey, EmailValidation, PasswordValidation } from '../../../../constants/Validations';
-import useLocations from './useLocations';
+import useLocations from './UseLocations';
 import '../../../AuthModule/auth.css';
 // ─── Constants ────────────────────────────────────────────────────────────────
 const browserLanguage = navigator.language || 'en';

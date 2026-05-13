@@ -29,8 +29,8 @@ export default function Home() {
 
   return (
     <>
-    
-    <Test/>
+{/*     
+    <Test/> */}
     {/* <div>
       <button className="" onClick={() => changeLanguage('en')}>English</button>
       <button onClick={() => changeLanguage('ar')}>العربية</button>

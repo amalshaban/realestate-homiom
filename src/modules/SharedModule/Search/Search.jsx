@@ -26,43 +26,53 @@ const SkeletonResults = () => (
   </>
 );
 
-const ResultCard = ({ property, onView }) => (
-  <div className="search-result-card" onClick={() => onView(property.id)}>
-    <img
-      src={property.mainImageUrl
-        ? `${BASE_IMG}${property.mainImageUrl}`
-        : `${BASE_IMG}/${property.image}`
-      }
-      alt={property.title}
-      className="search-result-img"
-      loading="lazy"
-      onError={e => { e.target.style.display = 'none'; }}
-    />
-    <div className="search-result-info">
-      <div className="d-flex align-items-center justify-content-between mb-1">
-        <p className="search-result-title">{property.title}</p>
-        <span className={`search-result-badge ${property.forRent ? 'rent' : 'sale'}`}>
+const ResultCard = ({ property, onView }) => {
+  const imageUrl = property.mainImageUrl
+    ? `${BASE_IMG}${property.mainImageUrl}`
+    : `${BASE_IMG}/${property.image}`;
+
+  return (
+    <div className="property-card" onClick={() => onView(property.id)}>
+      <div style={{ position: 'relative' }}>
+        <div className="card-img-wrapper">
+          <img
+            src={imageUrl}
+            alt={property.title}
+            loading="lazy"
+            onError={e => { e.target.style.display = 'none'; }}
+          />
+        </div>
+
+        <span className={`badge-listing ${property.forRent ? 'badge-for-rent' : 'badge-for-sale'}`}>
           {property.forRent ? 'For Rent' : 'For Sale'}
         </span>
       </div>
-      <p className="search-result-location">
-        <i className="fa-solid fa-location-dot" style={{ color: '#0088BD' }} />
-        {property.district}, {property.city}
-      </p>
-      <p className="search-result-price">
-        {property.price?.toLocaleString()} SAR
-        {property.forRent && (
-          <span style={{ fontSize: '13px', fontWeight: 400, color: '#888' }}> /month</span>
-        )}
-      </p>
-      <div className="search-result-specs">
-        {property.bedrooms  > 0 && <span><i className="fa-solid fa-bed"           /> {property.bedrooms}</span>}
-        {property.bathrooms > 0 && <span><i className="fa-solid fa-bath"          /> {property.bathrooms}</span>}
-        {property.area      > 0 && <span><i className="fa-solid fa-vector-square" /> {property.area} m²</span>}
+
+      <div className="p-3">
+        <div className="property-price">
+          {property.price?.toLocaleString()} SAR
+          {property.forRent && (
+            <span style={{ fontSize: '13px', fontWeight: 400, color: '#888' }}> /month</span>
+          )}
+        </div>
+
+        <div className="d-flex align-items-center justify-content-between mb-1">
+          <div className="property-location">
+            <i className="fa-solid fa-location-dot" style={{ color: '#0088BD' }} />
+            {property.district}, {property.city}
+          </div>
+          <span className="property-type-badge">{property.realStatePurpose || property.type || 'Property'}</span>
+        </div>
+
+        <div className="property-specs">
+          {property.bedrooms > 0 && <span><i className="fa-solid fa-bed" /> {property.bedrooms}</span>}
+          {property.bathrooms > 0 && <span><i className="fa-solid fa-bath" /> {property.bathrooms}</span>}
+          {property.area > 0 && <span><i className="fa-solid fa-vector-square" /> {property.area} m²</span>}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function Search() {
@@ -237,13 +247,15 @@ export default function Search() {
               )}
 
               {!loading && !error && results.length > 0 && (
-                results.map(property => (
-                  <ResultCard
-                    key={property.id}
-                    property={property}
-                    onView={handleViewProperty}
-                  />
-                ))
+                <div className="search-results-grid">
+                  {results.map(property => (
+                    <ResultCard
+                      key={property.id}
+                      property={property}
+                      onView={handleViewProperty}
+                    />
+                  ))}
+                </div>
               )}
 
               {!loading && !error && results.length === 0 && (

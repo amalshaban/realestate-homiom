@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import axios from 'axios';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
@@ -6,7 +6,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Row, Col } from 'react-bootstrap';
 import { USERS_URLs } from '../../../../constants/EndPoints';
 import { apiKey, EmailValidation, PasswordValidation } from '../../../../constants/Validations';
-import useLocations from './UseLocations';
 import '../../../AuthModule/auth.css';
 // ─── Constants ────────────────────────────────────────────────────────────────
 const browserLanguage = navigator.language || 'en';
@@ -14,18 +13,11 @@ const browserLanguage = navigator.language || 'en';
 const TABS = [
   { id: 'personal', label: 'Personal' },
   { id: 'company',  label: 'Company'  },
-  { id: 'branch',   label: 'Branch'   },
 ];
 
 const TAB_FIELDS = {
   personal: ['register.firstName', 'register.lastName', 'register.email', 'register.password', 'register.phone'],
   company:  ['nameAr', 'nameEn', 'cr', 'fal', 'falExpiryDate', 'logo'],
-  branch:   [
-    'agentBranch.branchName', 'agentBranch.countryId', 'agentBranch.cityId', 'agentBranch.districtId',
-    'agentBranch.addressAr', 'agentBranch.addressEn', 'agentBranch.shortAddress', 'agentBranch.buildingNo',
-    'agentBranch.additonalNo', 'agentBranch.zipeCode', 'agentBranch.landlinePhone', 'agentBranch.mobilePhone',
-    'agentBranch.email', 'agentBranch.whatsApp',
-  ],
 };
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -37,33 +29,19 @@ export default function AgentSignUp() {
   const [doneTabs,          setDoneTabs]          = useState([]);
   const [logoName,          setLogoName]          = useState('');
 
-  const { countries, cities, districts, fetchCities, fetchDistricts } = useLocations();
   const navigate = useNavigate();
 
   const {
     register,
     handleSubmit,
-    watch,
     trigger,
     formState: { errors },
   } = useForm({
     defaultValues: {
       register:    { firstName: '', lastName: '', email: '', password: '', phone: '' },
       nameAr: '', nameEn: '', cr: '', fal: '', falExpiryDate: '',
-      agentBranch: {
-        branchName: '', countryId: '0', cityId: '0', districtId: '0',
-        addressAr: '', addressEn: '', shortAddress: '', buildingNo: '',
-        additonalNo: '', zipeCode: '', landlinePhone: '', mobilePhone: '',
-        email: '', whatsApp: '', isMain: false,
-      },
     },
   });
-
-  const watchedCountryId = watch('agentBranch.countryId');
-  const watchedCityId    = watch('agentBranch.cityId');
-
-  useEffect(() => { fetchCities(watchedCountryId);   }, [watchedCountryId, fetchCities]);
-  useEffect(() => { fetchDistricts(watchedCityId);   }, [watchedCityId,    fetchDistricts]);
 
   const handleNext = useCallback(async () => {
     const valid = await trigger(TAB_FIELDS[activeTab]);
@@ -94,10 +72,6 @@ export default function AgentSignUp() {
     payload.append('fal',                data.fal);
     payload.append('falExpiryDate',      data.falExpiryDate);
     payload.append('logo',               data.logo[0]);
-
-    Object.entries(data.agentBranch).forEach(([key, val]) => {
-      payload.append(`agentBranch.${key}`, val);
-    });
 
     try {
       const response = await axios.post(USERS_URLs.AgentRegister, payload, {
@@ -280,141 +254,6 @@ export default function AgentSignUp() {
                   <span className="agent-file-name">{logoName || 'No file chosen'}</span>
                 </label>
                 {errors.logo && <p className="agent-error">{errors.logo.message}</p>}
-              </Col>
-            </Row>
-          )}
-
-          {/* ── Tab 3: Branch ── */}
-          {activeTab === 'branch' && (
-            <Row className="g-3">
-              <Col md={12}>
-                <label className="agent-label">Branch Name</label>
-                <input className={`agent-input ${errors.agentBranch?.branchName ? 'is-invalid' : ''}`}
-                  placeholder="Branch Name"
-                  {...register('agentBranch.branchName', { required: 'Branch name is required' })} />
-                {errors.agentBranch?.branchName && <p className="agent-error">{errors.agentBranch.branchName.message}</p>}
-              </Col>
-
-              <Col md={4}>
-                <label className="agent-label">Country</label>
-                <select className={`agent-input ${errors.agentBranch?.countryId ? 'is-invalid' : ''}`}
-                  {...register('agentBranch.countryId', { validate: v => v !== '0' || 'Please select a country' })}>
-                  <option value="0">Select Country</option>
-                  {countries.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-                {errors.agentBranch?.countryId && <p className="agent-error">{errors.agentBranch.countryId.message}</p>}
-              </Col>
-
-              <Col md={4}>
-                <label className="agent-label">City</label>
-                <select className={`agent-input ${errors.agentBranch?.cityId ? 'is-invalid' : ''}`}
-                  disabled={!watchedCountryId || watchedCountryId === '0'}
-                  {...register('agentBranch.cityId', { validate: v => v !== '0' || 'Please select a city' })}>
-                  <option value="0">Select City</option>
-                  {cities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-                {errors.agentBranch?.cityId && <p className="agent-error">{errors.agentBranch.cityId.message}</p>}
-              </Col>
-
-              <Col md={4}>
-                <label className="agent-label">District</label>
-                <select className={`agent-input ${errors.agentBranch?.districtId ? 'is-invalid' : ''}`}
-                  disabled={!watchedCityId || watchedCityId === '0'}
-                  {...register('agentBranch.districtId', { validate: v => v !== '0' || 'Please select a district' })}>
-                  <option value="0">Select District</option>
-                  {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
-                {errors.agentBranch?.districtId && <p className="agent-error">{errors.agentBranch.districtId.message}</p>}
-              </Col>
-
-              <Col md={6}>
-                <label className="agent-label">Address (Arabic)</label>
-                <input className={`agent-input ${errors.agentBranch?.addressAr ? 'is-invalid' : ''}`}
-                  placeholder="العنوان بالعربي"
-                  {...register('agentBranch.addressAr', { required: 'Arabic address is required' })} />
-                {errors.agentBranch?.addressAr && <p className="agent-error">{errors.agentBranch.addressAr.message}</p>}
-              </Col>
-
-              <Col md={6}>
-                <label className="agent-label">Address (English)</label>
-                <input className={`agent-input ${errors.agentBranch?.addressEn ? 'is-invalid' : ''}`}
-                  placeholder="Address in English"
-                  {...register('agentBranch.addressEn', { required: 'English address is required' })} />
-                {errors.agentBranch?.addressEn && <p className="agent-error">{errors.agentBranch.addressEn.message}</p>}
-              </Col>
-
-              <Col md={4}>
-                <label className="agent-label">Short Address</label>
-                <input className={`agent-input ${errors.agentBranch?.shortAddress ? 'is-invalid' : ''}`}
-                  placeholder="Short Address"
-                  {...register('agentBranch.shortAddress', { required: 'Short address is required' })} />
-                {errors.agentBranch?.shortAddress && <p className="agent-error">{errors.agentBranch.shortAddress.message}</p>}
-              </Col>
-
-              <Col md={4}>
-                <label className="agent-label">Building No.</label>
-                <input className={`agent-input ${errors.agentBranch?.buildingNo ? 'is-invalid' : ''}`}
-                  placeholder="Building Number"
-                  {...register('agentBranch.buildingNo', { required: 'Building number is required' })} />
-                {errors.agentBranch?.buildingNo && <p className="agent-error">{errors.agentBranch.buildingNo.message}</p>}
-              </Col>
-
-              <Col md={4}>
-                <label className="agent-label">Additional No.</label>
-                <input className={`agent-input ${errors.agentBranch?.additonalNo ? 'is-invalid' : ''}`}
-                  placeholder="Additional Number"
-                  {...register('agentBranch.additonalNo', { required: 'Additional number is required' })} />
-                {errors.agentBranch?.additonalNo && <p className="agent-error">{errors.agentBranch.additonalNo.message}</p>}
-              </Col>
-
-              <Col md={4}>
-                <label className="agent-label">Zip Code</label>
-                <input className={`agent-input ${errors.agentBranch?.zipeCode ? 'is-invalid' : ''}`}
-                  placeholder="Zip Code"
-                  {...register('agentBranch.zipeCode', { required: 'Zip code is required' })} />
-                {errors.agentBranch?.zipeCode && <p className="agent-error">{errors.agentBranch.zipeCode.message}</p>}
-              </Col>
-
-              <Col md={4}>
-                <label className="agent-label">Landline</label>
-                <input className={`agent-input ${errors.agentBranch?.landlinePhone ? 'is-invalid' : ''}`}
-                  placeholder="Landline Phone"
-                  {...register('agentBranch.landlinePhone', { required: 'Landline is required' })} />
-                {errors.agentBranch?.landlinePhone && <p className="agent-error">{errors.agentBranch.landlinePhone.message}</p>}
-              </Col>
-
-              <Col md={4}>
-                <label className="agent-label">Mobile</label>
-                <input className={`agent-input ${errors.agentBranch?.mobilePhone ? 'is-invalid' : ''}`}
-                  placeholder="Mobile Phone"
-                  {...register('agentBranch.mobilePhone', { required: 'Mobile is required' })} />
-                {errors.agentBranch?.mobilePhone && <p className="agent-error">{errors.agentBranch.mobilePhone.message}</p>}
-              </Col>
-
-              <Col md={6}>
-                <label className="agent-label">Branch Email</label>
-                <input type="email" className={`agent-input ${errors.agentBranch?.email ? 'is-invalid' : ''}`}
-                  placeholder="branch@example.com"
-                  {...register('agentBranch.email', EmailValidation)} />
-                {errors.agentBranch?.email && <p className="agent-error">{errors.agentBranch.email.message}</p>}
-              </Col>
-
-              <Col md={6}>
-                <label className="agent-label">WhatsApp</label>
-                <input className={`agent-input ${errors.agentBranch?.whatsApp ? 'is-invalid' : ''}`}
-                  placeholder="+966 5xx xxx xxx"
-                  {...register('agentBranch.whatsApp', { required: 'WhatsApp is required' })} />
-                {errors.agentBranch?.whatsApp && <p className="agent-error">{errors.agentBranch.whatsApp.message}</p>}
-              </Col>
-
-              <Col md={12}>
-                <div className="form-check">
-                  <input type="checkbox" className="form-check-input" id="isMain"
-                    {...register('agentBranch.isMain')} />
-                  <label className="form-check-label agent-label" htmlFor="isMain">
-                    This is the main branch
-                  </label>
-                </div>
               </Col>
             </Row>
           )}

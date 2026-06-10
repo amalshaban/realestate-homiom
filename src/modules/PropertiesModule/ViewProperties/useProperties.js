@@ -1,8 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { apiKey } from '../../../constants/Validations.js';
+import { PROPERTIES_URLS, USERS_URLs } from '../../../constants/EndPoints.js';
 
-const BASE_URL = 'https://realstate.niledevelopers.com';
+const headers = () => ({
+  Authorization: `Bearer ${sessionStorage.token}`,
+  apiKey,
+  'Content-Type': 'application/json',
+  'Accept-Language': 'browserLanguage',
+});
 
 export default function useProperties() {
 
@@ -14,13 +20,8 @@ export default function useProperties() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${BASE_URL}/properties/active`, {
-        headers: {
-          Authorization: `Bearer ${sessionStorage.token}`,
-          apiKey,
-          'Content-Type': 'application/json',
-          'Accept-Language': 'browserLanguage',
-        },
+      const response = await axios.get(PROPERTIES_URLS.activeProperties, {
+        headers: headers(),
       });
       setProperties(response.data.properties || []);
     } catch (err) {
@@ -33,19 +34,12 @@ export default function useProperties() {
   const sendView = useCallback(async (id) => {
     try {
       await axios.post(
-        `${BASE_URL}/User/add-new-watch`,
+        USERS_URLs.AddWatch,
         { propertyId: id },
-        {
-          headers: {
-            Authorization: `Bearer ${sessionStorage.token}`,
-            apiKey,
-            'Content-Type': 'application/json',
-            'Accept-Language': 'browserLanguage',
-          },
-        }
+        { headers: headers() }
       );
-    } catch (err) {
-      // silent fail — view tracking shouldn't break UX
+    } catch {
+      // silent fail
     }
   }, []);
 

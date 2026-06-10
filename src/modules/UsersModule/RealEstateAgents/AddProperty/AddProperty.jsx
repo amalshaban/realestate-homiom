@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useForm, Controller } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { Row, Col } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +10,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import useAddProperty from '../useAddProperty.js';
 import { apiKey } from '../../../../constants/Validations.js';
-import '../../RealEstateAgents/AgentPannel.css';
+import { LOCATIONS_URLs, BASE_URL } from '../../../../constants/EndPoints.js';
+import '../AgentPannel.css';
 
 // ─── Fix Leaflet default icon ──────────────────────────────────────────────────
 delete L.Icon.Default.prototype._getIconUrl;
@@ -20,14 +22,14 @@ L.Icon.Default.mergeOptions({
 });
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const AMENITIES = [
-  { id: 1, label: 'Private Pool',  icon: 'fa-solid fa-water-ladder'  },
-  { id: 2, label: 'Elevator',      icon: 'fa-solid fa-elevator'       },
-  { id: 3, label: 'Driver Room',   icon: 'fa-solid fa-car'            },
-  { id: 4, label: 'Roof Deck',     icon: 'fa-solid fa-building'       },
-  { id: 5, label: 'Gym',           icon: 'fa-solid fa-dumbbell'       },
-  { id: 6, label: 'Parking',       icon: 'fa-solid fa-square-parking' },
-  { id: 7, label: 'Garden',        icon: 'fa-solid fa-tree'           },
+const AMENITY_KEYS = [
+  { id: 1, key: 'private_pool', icon: 'fa-solid fa-water-ladder'  },
+  { id: 2, key: 'elevator',     icon: 'fa-solid fa-elevator'       },
+  { id: 3, key: 'driver_room',  icon: 'fa-solid fa-car'            },
+  { id: 4, key: 'roof_deck',    icon: 'fa-solid fa-building'       },
+  { id: 5, key: 'gym',          icon: 'fa-solid fa-dumbbell'       },
+  { id: 6, key: 'parking',      icon: 'fa-solid fa-square-parking' },
+  { id: 7, key: 'garden',       icon: 'fa-solid fa-tree'           },
 ];
 
 const DEFAULT_CENTER = [24.7136, 46.6753];
@@ -35,9 +37,7 @@ const DEFAULT_CENTER = [24.7136, 46.6753];
 // ─── Map Click Handler ────────────────────────────────────────────────────────
 const MapClickHandler = ({ onLocationSelect }) => {
   useMapEvents({
-    click(e) {
-      onLocationSelect(e.latlng.lat, e.latlng.lng);
-    },
+    click(e) { onLocationSelect(e.latlng.lat, e.latlng.lng); },
   });
   return null;
 };
@@ -56,6 +56,8 @@ const Counter = ({ value, onChange }) => (
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AddProperty() {
 
+  const { t } = useTranslation();
+
   const {
     realStateTypes, purposeTypes, rentTypes,
     countries, cities, districts,
@@ -63,13 +65,13 @@ export default function AddProperty() {
     fetchCities, fetchDistricts, submitProperty,
   } = useAddProperty();
 
-  const [markerPos,          setMarkerPos]          = useState(null);
-  const [bedrooms,           setBedrooms]            = useState(0);
-  const [bathrooms,          setBathrooms]           = useState(0);
-  const [selectedAmenities,  setSelectedAmenities]   = useState([]);
-  const [ejarEnabled,        setEjarEnabled]         = useState(true);
-  const [images,             setImages]              = useState([]);
-  const [imagePreviews,      setImagePreviews]       = useState([]);
+  const [markerPos,         setMarkerPos]         = useState(null);
+  const [bedrooms,          setBedrooms]           = useState(0);
+  const [bathrooms,         setBathrooms]          = useState(0);
+  const [selectedAmenities, setSelectedAmenities]  = useState([]);
+  const [ejarEnabled,       setEjarEnabled]        = useState(true);
+  const [images,            setImages]             = useState([]);
+  const [imagePreviews,     setImagePreviews]      = useState([]);
   const navigate = useNavigate();
 
   const {
@@ -92,8 +94,8 @@ export default function AddProperty() {
   const watchedCityId    = watch('cityId');
   const watchedForRent   = watch('forRent');
 
-  useEffect(() => { fetchCities(watchedCountryId);   }, [watchedCountryId, fetchCities]);
-  useEffect(() => { fetchDistricts(watchedCityId);   }, [watchedCityId,    fetchDistricts]);
+  useEffect(() => { fetchCities(watchedCountryId);  }, [watchedCountryId, fetchCities]);
+  useEffect(() => { fetchDistricts(watchedCityId);  }, [watchedCityId,    fetchDistricts]);
 
   // ── Reverse Geocoding ──
   const reverseGeocode = useCallback(async (lat, lng) => {
@@ -107,9 +109,7 @@ export default function AddProperty() {
         city:     data.address?.city || data.address?.town || data.address?.state || '',
         district: data.address?.suburb || data.address?.district || data.address?.neighbourhood || '',
       };
-    } catch {
-      return null;
-    }
+    } catch { return null; }
   }, []);
 
   // ── Map Click ──
@@ -129,7 +129,7 @@ export default function AddProperty() {
 
       setTimeout(async () => {
         const cityRes = await axios.get(
-          `https://realstate.niledevelopers.com/Locations/Cities?id=${matchedCountry.id}`,
+          `${LOCATIONS_URLs.Cities}${matchedCountry.id}`,
           { headers: { Authorization: `Bearer ${sessionStorage.token}`, apiKey } }
         );
         const citiesList = cityRes.data || [];
@@ -144,7 +144,7 @@ export default function AddProperty() {
 
           setTimeout(async () => {
             const distRes = await axios.get(
-              `https://realstate.niledevelopers.com/Locations/Districts?id=${matchedCity.id}`,
+              `${LOCATIONS_URLs.Districts}${matchedCity.id}`,
               { headers: { Authorization: `Bearer ${sessionStorage.token}`, apiKey } }
             );
             const districtsList = distRes.data || [];
@@ -152,9 +152,7 @@ export default function AddProperty() {
               d.name.toLowerCase().includes(location.district.toLowerCase()) ||
               location.district.toLowerCase().includes(d.name.toLowerCase())
             );
-            if (matchedDistrict) {
-              setValue('districtId', String(matchedDistrict.id));
-            }
+            if (matchedDistrict) setValue('districtId', String(matchedDistrict.id));
           }, 500);
         }
       }, 500);
@@ -167,16 +165,15 @@ export default function AddProperty() {
   const handleUseCurrentLocation = useCallback(() => {
     navigator.geolocation.getCurrentPosition(
       (pos) => handleMapClick(pos.coords.latitude, pos.coords.longitude),
-      () => toast.error('Could not get your location')
+      () => toast.error(t('location_error'))
     );
-  }, [handleMapClick]);
+  }, [handleMapClick, t]);
 
   // ── Image Handlers ──
   const handleImages = useCallback((e) => {
     const files = Array.from(e.target.files);
     setImages(prev => [...prev, ...files]);
-    const previews = files.map(f => URL.createObjectURL(f));
-    setImagePreviews(prev => [...prev, ...previews]);
+    setImagePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
   }, []);
 
   const removeImage = useCallback((idx) => {
@@ -197,35 +194,29 @@ export default function AddProperty() {
   // ── Submit ──
   const onSubmit = useCallback(async (data) => {
     if (images.length === 0) {
-      toast.error('Please add at least one image');
+      toast.error(t('add_image_required'));
       return;
     }
-    const toastId = toast.loading('Adding property...');
+    const toastId = toast.loading(t('adding_property'));
     const success = await submitProperty({
-      ...data,
-      bedrooms,
-      bathrooms,
+      ...data, bedrooms, bathrooms,
       locationLat: markerPos?.[0] || '',
       locationLng: markerPos?.[1] || '',
     }, images);
 
     if (success) {
       toast.update(toastId, {
-        render: 'Property added successfully! 🎉',
-        type: 'success',
-        isLoading: false,
-        autoClose: 2000,
+        render: t('property_added'),
+        type: 'success', isLoading: false, autoClose: 2000,
       });
       setTimeout(() => navigate('/agentpannel/properties'), 500);
     } else {
       toast.update(toastId, {
-        render: error || 'Failed to add property.',
-        type: 'error',
-        isLoading: false,
-        autoClose: 3000,
+        render: error || t('failed_add_property'),
+        type: 'error', isLoading: false, autoClose: 3000,
       });
     }
-  }, [images, bedrooms, bathrooms, markerPos, submitProperty, error, navigate]);
+  }, [images, bedrooms, bathrooms, markerPos, submitProperty, error, navigate, t]);
 
   return (
     <div className="add-prop-page">
@@ -235,22 +226,22 @@ export default function AddProperty() {
             Section 1 — Property Foundation
         ══════════════════════════════════════ */}
         <div className="add-prop-section">
-          <h2 className="add-prop-title">Property Foundation</h2>
-          <p className="add-prop-subtitle">Provide the core technical details for your Riyadh-based listing.</p>
+          <h2 className="add-prop-title">{t('property_foundation')}</h2>
+          <p className="add-prop-subtitle">{t('property_foundation_subtitle')}</p>
 
           <Row className="g-2 align-items-center">
             <Col md={6}>
-              <label className="add-prop-label">Property Type</label>
+              <label className="add-prop-label">{t('property_type')}</label>
               <select className={`add-prop-input ${errors.realStateTypeId ? 'is-invalid' : ''}`}
-                {...register('realStateTypeId', { validate: v => v !== '0' || 'Required' })}>
-                <option value="0">Select Type</option>
-                {realStateTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                {...register('realStateTypeId', { validate: v => v !== '0' || t('required') })}>
+                <option value="0">{t('select_type')}</option>
+                {realStateTypes.map(type => <option key={type.id} value={type.id}>{type.name}</option>)}
               </select>
               {errors.realStateTypeId && <p className="add-prop-error-text">{errors.realStateTypeId.message}</p>}
             </Col>
 
             <Col md={6}>
-              <label className="add-prop-label">Listing Category</label>
+              <label className="add-prop-label">{t('listing_category')}</label>
               <Controller
                 name="forRent"
                 control={control}
@@ -258,10 +249,10 @@ export default function AddProperty() {
                   <div className="add-prop-toggle">
                     <button type="button"
                       className={`add-prop-toggle-btn ${!field.value ? 'active' : ''}`}
-                      onClick={() => field.onChange(false)}>For Sale</button>
+                      onClick={() => field.onChange(false)}>{t('for_sale')}</button>
                     <button type="button"
                       className={`add-prop-toggle-btn ${field.value ? 'active' : ''}`}
-                      onClick={() => field.onChange(true)}>For Rent</button>
+                      onClick={() => field.onChange(true)}>{t('for_rent')}</button>
                   </div>
                 )}
               />
@@ -269,19 +260,19 @@ export default function AddProperty() {
 
             {watchedForRent && (
               <Col md={6}>
-                <label className="add-prop-label">Rent Type</label>
+                <label className="add-prop-label">{t('rent_type')}</label>
                 <select className="add-prop-input" {...register('realStateRentTypeId')}>
-                  <option value="0">Select Rent Type</option>
+                  <option value="0">{t('select_rent_type')}</option>
                   {rentTypes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
               </Col>
             )}
 
             <Col md={watchedForRent ? 6 : 12}>
-              <label className="add-prop-label">Purpose</label>
+              <label className="add-prop-label">{t('purpose')}</label>
               <select className={`add-prop-input ${errors.realStatePurposeId ? 'is-invalid' : ''}`}
-                {...register('realStatePurposeId', { validate: v => v !== '0' || 'Required' })}>
-                <option value="0">Select Purpose</option>
+                {...register('realStatePurposeId', { validate: v => v !== '0' || t('required') })}>
+                <option value="0">{t('select_purpose')}</option>
                 {purposeTypes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
               {errors.realStatePurposeId && <p className="add-prop-error-text">{errors.realStatePurposeId.message}</p>}
@@ -292,24 +283,21 @@ export default function AddProperty() {
           <div className="add-prop-broker-box">
             <p className="add-prop-broker-title">
               <i className="fa-solid fa-file-contract" style={{ color: '#0088BD' }} />
-              Broker Compliance Information
+              {t('broker_compliance')}
             </p>
             <Row className="g-2">
               <Col md={6}>
-                <label className="add-prop-label">RE-Broker License #</label>
-                <input className="add-prop-input"
-                  placeholder="SA-9942-X03"
-                  {...register('brokerLicense')} />
+                <label className="add-prop-label">{t('broker_license')}</label>
+                <input className="add-prop-input" placeholder="SA-9942-X03" {...register('brokerLicense')} />
               </Col>
               <Col md={6}>
-                <label className="add-prop-label">Ejar Integration Mode</label>
+                <label className="add-prop-label">{t('ejar_mode')}</label>
                 <div className="add-prop-ejar-wrapper">
                   <span className="add-prop-ejar-label">
-                    {ejarEnabled ? 'Auto-Sync Enabled' : 'Auto-Sync Disabled'}
+                    {ejarEnabled ? t('auto_sync_enabled') : t('auto_sync_disabled')}
                   </span>
                   <label className="add-prop-ejar-toggle">
-                    <input type="checkbox" checked={ejarEnabled}
-                      onChange={() => setEjarEnabled(v => !v)} />
+                    <input type="checkbox" checked={ejarEnabled} onChange={() => setEjarEnabled(v => !v)} />
                     <span className="add-prop-ejar-slider" />
                   </label>
                 </div>
@@ -324,28 +312,18 @@ export default function AddProperty() {
         <div className="add-prop-section">
           <div className="add-prop-location-header">
             <div>
-              <h2 className="add-prop-title">Precise Location</h2>
-              <p className="add-prop-subtitle" style={{ margin: 0 }}>
-                Select the district and pin the exact location.
-              </p>
+              <h2 className="add-prop-title">{t('precise_location')}</h2>
+              <p className="add-prop-subtitle" style={{ margin: 0 }}>{t('precise_location_subtitle')}</p>
             </div>
-            <button type="button" className="add-prop-use-location"
-              onClick={handleUseCurrentLocation}>
+            <button type="button" className="add-prop-use-location" onClick={handleUseCurrentLocation}>
               <i className="fa-solid fa-location-crosshairs" />
-              Use Current Location
+              {t('use_current_location')}
             </button>
           </div>
 
           <div className="add-prop-map-wrapper">
-            <MapContainer
-              center={markerPos || DEFAULT_CENTER}
-              zoom={12}
-              style={{ height: '100%', width: '100%' }}
-            >
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; OpenStreetMap contributors'
-              />
+            <MapContainer center={markerPos || DEFAULT_CENTER} zoom={12} style={{ height: '100%', width: '100%' }}>
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap contributors' />
               <MapClickHandler onLocationSelect={handleMapClick} />
               {markerPos && <Marker position={markerPos} />}
             </MapContainer>
@@ -353,42 +331,39 @@ export default function AddProperty() {
 
           <Row className="g-2 mt-2">
             <Col md={4}>
-              <label className="add-prop-label">Country</label>
-              <select className="add-prop-input"
-                {...register('countryId', { validate: v => v !== '0' || 'Required' })}>
-                <option value="0">Select Country</option>
+              <label className="add-prop-label">{t('country')}</label>
+              <select className="add-prop-input" {...register('countryId', { validate: v => v !== '0' || t('required') })}>
+                <option value="0">{t('select_country')}</option>
                 {countries.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
               {errors.countryId && <p className="add-prop-error-text">{errors.countryId.message}</p>}
             </Col>
 
             <Col md={4}>
-              <label className="add-prop-label">City</label>
+              <label className="add-prop-label">{t('city')}</label>
               <select className="add-prop-input"
                 disabled={!watchedCountryId || watchedCountryId === '0'}
-                {...register('cityId', { validate: v => v !== '0' || 'Required' })}>
-                <option value="0">Select City</option>
+                {...register('cityId', { validate: v => v !== '0' || t('required') })}>
+                <option value="0">{t('select_city')}</option>
                 {cities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
               {errors.cityId && <p className="add-prop-error-text">{errors.cityId.message}</p>}
             </Col>
 
             <Col md={4}>
-              <label className="add-prop-label">District</label>
+              <label className="add-prop-label">{t('district')}</label>
               <select className="add-prop-input"
                 disabled={!watchedCityId || watchedCityId === '0'}
-                {...register('districtId', { validate: v => v !== '0' || 'Required' })}>
-                <option value="0">Select District</option>
+                {...register('districtId', { validate: v => v !== '0' || t('required') })}>
+                <option value="0">{t('select_district')}</option>
                 {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
               {errors.districtId && <p className="add-prop-error-text">{errors.districtId.message}</p>}
             </Col>
 
             <Col md={12}>
-              <label className="add-prop-label">Location Description</label>
-              <input className="add-prop-input"
-                placeholder="e.g. Near King Fahd Road"
-                {...register('locationDescription')} />
+              <label className="add-prop-label">{t('location_description')}</label>
+              <input className="add-prop-input" placeholder={t('location_description_placeholder')} {...register('locationDescription')} />
             </Col>
           </Row>
         </div>
@@ -397,70 +372,66 @@ export default function AddProperty() {
             Section 3 — Dimensions & Value
         ══════════════════════════════════════ */}
         <div className="add-prop-section">
-          <h2 className="add-prop-title">Dimensions & Value</h2>
+          <h2 className="add-prop-title">{t('dimensions_value')}</h2>
 
           <Row className="g-3">
             <Col md={6}>
-              <label className="add-prop-label">Asking Price (SAR)</label>
+              <label className="add-prop-label">{t('asking_price')}</label>
               <div className="add-prop-price-wrapper">
                 <input type="number"
                   className={`add-prop-input ${errors.price ? 'is-invalid' : ''}`}
                   placeholder="3,250,000"
-                  {...register('price', { required: 'Price is required', min: 1 })} />
+                  {...register('price', { required: t('price_required'), min: 1 })} />
                 <span className="add-prop-price-unit">SAR</span>
               </div>
               {errors.price && <p className="add-prop-error-text">{errors.price.message}</p>}
-              <p style={{ fontSize: '12px', color: '#0088BD', marginTop: '6px' }}>
-                Suggested market value for this area: 3.1M - 3.4M SAR
-              </p>
+              <p style={{ fontSize: '12px', color: '#0088BD', marginTop: '6px' }}>{t('suggested_market_value')}</p>
             </Col>
 
             <Col md={6}>
-              <label className="add-prop-label">Total Area (M²)</label>
+              <label className="add-prop-label">{t('total_area')}</label>
               <div className="add-prop-price-wrapper">
-                <input type="number" className="add-prop-input"
-                  placeholder="450"
-                  {...register('area')} />
+                <input type="number" className="add-prop-input" placeholder="450" {...register('area')} />
                 <span className="add-prop-price-unit">m²</span>
               </div>
             </Col>
 
             <Col md={6}>
-              <label className="add-prop-label">Bedrooms</label>
+              <label className="add-prop-label">{t('bedrooms')}</label>
               <Counter value={bedrooms} onChange={setBedrooms} />
             </Col>
 
             <Col md={6}>
-              <label className="add-prop-label">Bathrooms</label>
+              <label className="add-prop-label">{t('bathrooms')}</label>
               <Counter value={bathrooms} onChange={setBathrooms} />
             </Col>
 
             <Col md={12}>
-              <label className="add-prop-label">Title</label>
+              <label className="add-prop-label">{t('title')}</label>
               <input className={`add-prop-input ${errors.title ? 'is-invalid' : ''}`}
-                placeholder="e.g. Luxury Villa in Riyadh"
-                {...register('title', { required: 'Title is required' })} />
+                placeholder={t('title_placeholder')}
+                {...register('title', { required: t('title_required') })} />
               {errors.title && <p className="add-prop-error-text">{errors.title.message}</p>}
             </Col>
 
             <Col md={12}>
-              <label className="add-prop-label">Description</label>
+              <label className="add-prop-label">{t('description')}</label>
               <textarea className={`add-prop-input ${errors.description ? 'is-invalid' : ''}`}
-                rows={3} placeholder="Describe the property..."
-                {...register('description', { required: 'Description is required' })} />
+                rows={3} placeholder={t('description_placeholder')}
+                {...register('description', { required: t('description_required') })} />
               {errors.description && <p className="add-prop-error-text">{errors.description.message}</p>}
             </Col>
 
             <Col md={6}>
-              <label className="add-prop-label">Contact Phone</label>
+              <label className="add-prop-label">{t('contact_phone')}</label>
               <input className={`add-prop-input ${errors.contactPhone ? 'is-invalid' : ''}`}
                 placeholder="+966 5xx xxx xxx"
-                {...register('contactPhone', { required: 'Phone is required' })} />
+                {...register('contactPhone', { required: t('phone_required') })} />
               {errors.contactPhone && <p className="add-prop-error-text">{errors.contactPhone.message}</p>}
             </Col>
 
             <Col md={6}>
-              <label className="add-prop-label">Negotiable</label>
+              <label className="add-prop-label">{t('negotiable')}</label>
               <Controller
                 name="isNegotiable"
                 control={control}
@@ -468,10 +439,10 @@ export default function AddProperty() {
                   <div className="add-prop-toggle">
                     <button type="button"
                       className={`add-prop-toggle-btn ${!field.value ? 'active' : ''}`}
-                      onClick={() => field.onChange(false)}>No</button>
+                      onClick={() => field.onChange(false)}>{t('no')}</button>
                     <button type="button"
                       className={`add-prop-toggle-btn ${field.value ? 'active' : ''}`}
-                      onClick={() => field.onChange(true)}>Yes</button>
+                      onClick={() => field.onChange(true)}>{t('yes')}</button>
                   </div>
                 )}
               />
@@ -483,9 +454,9 @@ export default function AddProperty() {
             Section 4 — Key Amenities
         ══════════════════════════════════════ */}
         <div className="add-prop-section">
-          <h2 className="add-prop-title">Key Amenities</h2>
+          <h2 className="add-prop-title">{t('key_amenities')}</h2>
           <div className="add-prop-amenities-grid">
-            {AMENITIES.map(amenity => (
+            {AMENITY_KEYS.map(amenity => (
               <div
                 key={amenity.id}
                 className={`add-prop-amenity-card ${selectedAmenities.includes(amenity.id) ? 'selected' : ''}`}
@@ -497,7 +468,7 @@ export default function AddProperty() {
                   </div>
                 )}
                 <i className={amenity.icon} />
-                <span>{amenity.label}</span>
+                <span>{t(amenity.key)}</span>
               </div>
             ))}
           </div>
@@ -507,35 +478,23 @@ export default function AddProperty() {
             Section 5 — Property Images
         ══════════════════════════════════════ */}
         <div className="add-prop-section">
-          <h2 className="add-prop-title">Property Images</h2>
-          <p className="add-prop-subtitle">Add at least one image for your listing.</p>
+          <h2 className="add-prop-title">{t('property_images')}</h2>
+          <p className="add-prop-subtitle">{t('property_images_subtitle')}</p>
 
-          {/* Upload Area */}
           <label className="add-prop-image-upload" htmlFor="property-images">
             <i className="fa-solid fa-cloud-arrow-up" />
-            <p>Click to upload images</p>
-            <span>PNG, JPG up to 10MB each</span>
-            <input
-              id="property-images"
-              type="file"
-              multiple
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={handleImages}
-            />
+            <p>{t('click_to_upload')}</p>
+            <span>{t('image_format_hint')}</span>
+            <input id="property-images" type="file" multiple accept="image/*"
+              style={{ display: 'none' }} onChange={handleImages} />
           </label>
 
-          {/* Previews */}
           {imagePreviews.length > 0 && (
             <div className="add-prop-image-preview">
               {imagePreviews.map((src, idx) => (
                 <div key={idx} className="add-prop-image-thumb">
                   <img src={src} alt={`preview-${idx}`} />
-                  <button
-                    type="button"
-                    className="add-prop-image-thumb-remove"
-                    onClick={() => removeImage(idx)}
-                  >
+                  <button type="button" className="add-prop-image-thumb-remove" onClick={() => removeImage(idx)}>
                     <i className="fa-solid fa-xmark" />
                   </button>
                 </div>
@@ -548,14 +507,13 @@ export default function AddProperty() {
             Footer
         ══════════════════════════════════════ */}
         <div className="add-prop-footer">
-          <button type="button" className="add-prop-prev-btn"
-            onClick={() => navigate(-1)}>
-            Previous: Identity
+          <button type="button" className="add-prop-prev-btn" onClick={() => navigate(-1)}>
+            {t('previous')}
           </button>
           <button type="submit" className="add-prop-submit-btn" disabled={submitting}>
             {submitting
-              ? <><span className="spinner-border spinner-border-sm" /> Adding...</>
-              : <>Submit Property <i className="fa-solid fa-check" /></>
+              ? <><span className="spinner-border spinner-border-sm" /> {t('adding')}</>
+              : <>{t('submit_property')} <i className="fa-solid fa-check" /></>
             }
           </button>
         </div>

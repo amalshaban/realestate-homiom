@@ -1,37 +1,38 @@
 import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../../../AuthModule/context/AuthContext';
 import profileimg from '../../../../assets/imgs/profile.png';
+import { BASE_URL } from '../../../../constants/EndPoints.js';
 import '../../RealEstateAgents/AgentPannel.css';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const BASE_URL = 'https://realstate.niledevelopers.com/images/';
-
 const NAV_LINKS = [
-  { label: 'Marketplace', to: '/agentlayout/marketplace' },
-  { label: 'Insights',    to: '/agentlayout/insights'    },
-  { label: 'Concierge',   to: '/agentlayout/concierge'   },
+  { key: 'marketplace', to: '/agentlayout/marketplace' },
+  { key: 'insights',    to: '/agentlayout/insights'    },
+  { key: 'concierge',   to: '/agentlayout/concierge'   },
 ];
 
-
 // ─── Main Component ───────────────────────────────────────────────────────────
-export default function AgentNav({onMenuClick}) {
+export default function AgentNav({ onMenuClick }) {
 
   const { loginData } = useContext(AuthContext);
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const photo     = loginData?.Photo || '';
-  const photoLink = photo ? `${BASE_URL}${photo}` : profileimg;
+  const photoLink = photo ? `${BASE_URL}/images/${photo}` : profileimg;
 
   return (
     <nav className="agent-nav">
-<button
-  className="d-md-none me-3"
-  style={{ background: 'none', border: 'none', fontSize: '20px', color: '#0b0d2a' }}
-  onClick={onMenuClick}
->
-  <i className="fa-solid fa-bars" />
-</button>
+      <button
+        className="d-md-none me-3"
+        style={{ background: 'none', border: 'none', fontSize: '20px', color: '#0b0d2a' }}
+        onClick={onMenuClick}
+      >
+        <i className="fa-solid fa-bars" />
+      </button>
+
       {/* ── Brand ── */}
       <Link to="/agentlayout/overview" className="agent-nav-brand">
         Homiom
@@ -40,8 +41,8 @@ export default function AgentNav({onMenuClick}) {
       {/* ── Center Links ── */}
       <ul className="agent-nav-links">
         {NAV_LINKS.map(link => (
-          <li key={link.label}>
-            <Link to={link.to}>{link.label}</Link>
+          <li key={link.key}>
+            <Link to={link.to}>{t(link.key)}</Link>
           </li>
         ))}
       </ul>
@@ -50,13 +51,13 @@ export default function AgentNav({onMenuClick}) {
       <div className="agent-nav-right">
 
         {/* Bell */}
-        <button className="agent-nav-bell" title="Notifications">
+        <button className="agent-nav-bell" title={t('notifications')}>
           <i className="fa-regular fa-bell" />
         </button>
 
         {/* List Property */}
-        <Link to="/agentlayout/addproperty" className="agent-nav-list-btn">
-          List Property
+        <Link to="agentpannel/addproperty" className="agent-nav-list-btn">
+          {t('list_property')}
         </Link>
 
         {/* Avatar */}

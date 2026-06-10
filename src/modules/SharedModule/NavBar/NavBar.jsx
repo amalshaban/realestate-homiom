@@ -7,26 +7,30 @@ import {
   Navbar, Nav, NavDropdown,
   Container, Button, Row, Col, Image, Dropdown
 } from 'react-bootstrap';
+import { BASE_URL } from '../../../constants/EndPoints.js';
+
+
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 const MENU_DATA = {
   Buy: [
-    { title: 'Homes for sale',          desc: 'Browse available properties' },
-    { title: 'New construction',        desc: 'Explore new builds'          },
-    { title: 'Coming soon',             desc: 'Pre-market listings'         },
-    { title: 'For sale by owner',       desc: 'Direct from owners'          },
-    { title: 'Recent home sales',       desc: 'View sold properties'        },
-    { title: 'All homes',               desc: 'Complete catalog'            },
+    { title: 'Homes for sale',           desc: 'Browse available properties' },
+    { title: 'New construction',         desc: 'Explore new builds'          },
+    { title: 'Coming soon',              desc: 'Pre-market listings'         },
+    { title: 'For sale by owner',        desc: 'Direct from owners'          },
+    { title: 'Recent home sales',        desc: 'View sold properties'        },
+    { title: 'All homes',                desc: 'Complete catalog'            },
   ],
   Rent: [
-    { title: 'Apartments for rent',     desc: 'Find your apartment'         },
-    { title: 'Homes for rent',          desc: 'Rent a house'                },
-    { title: 'Commercial for rent',     desc: 'Business spaces'             },
-    { title: 'All listings for rent',   desc: 'View all rentals'            },
+    { title: 'Apartments for rent',      desc: 'Find your apartment'         },
+    { title: 'Homes for rent',           desc: 'Rent a house'                },
+    { title: 'Commercial for rent',      desc: 'Business spaces'             },
+    { title: 'All listings for rent',    desc: 'View all rentals'            },
   ],
   Sell: [
-    { title: 'Explore options',         desc: 'Discover selling strategies' },
-    { title: 'Estimating service',      desc: 'Get your home value'         },
-    { title: 'Read blogs',              desc: 'Tips and guides'             },
+    { title: 'Explore options',          desc: 'Discover selling strategies' },
+    { title: 'Estimating service',       desc: 'Get your home value'         },
+    { title: 'Read blogs',               desc: 'Tips and guides'             },
   ],
   Agents: [
     { title: 'Property Agents',          desc: 'Licensed professionals',   label: 'LOOKING FOR PRO' },
@@ -65,14 +69,15 @@ const MegaMenu = ({ items }) => {
 export default function NavBar() {
 
   const { loginData, logOut } = useContext(AuthContext);
-  const { t } = useTranslation();
-  const navigate = useNavigate();
+  const { t, i18n }           = useTranslation();
+  const navigate               = useNavigate();
 
   // ── Derived user info ──
   const name      = loginData?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || 'Guest';
   const photo     = loginData?.Photo || '';
   const role      = loginData?.role  || 'anonymous';
-  const photoLink = photo ? `https://realstate.niledevelopers.com/images/${photo}` : profileimg;
+  
+const photoLink = photo ? `${BASE_URL}/images/${photo}` : profileimg;
 
   // ── Handlers ──
   const handleLogout = useCallback(() => {
@@ -82,8 +87,12 @@ export default function NavBar() {
 
   const handleDashboard = useCallback(() => {
     if (role === 'Normal') navigate('/homeSeekerLayout');
-    else if (role === 'Agent') navigate('/AgentPannel');
+    else if (role === 'Agent') navigate('/agentpannel');
   }, [role, navigate]);
+
+  const handleLanguageChange = useCallback((lng) => {
+    i18n.changeLanguage(lng);
+  }, [i18n]);
 
   return (
     <Navbar
@@ -111,33 +120,42 @@ export default function NavBar() {
             {Object.entries(MENU_DATA).map(([label, items]) => (
               <NavDropdown
                 key={label}
-                title={label}
+                title={t(label.toLowerCase())}
                 id={`${label.toLowerCase()}-dropdown`}
                 className="px-1 mega-dropdown"
               >
                 <MegaMenu items={items} />
               </NavDropdown>
             ))}
-            <Nav.Link href="#manage"    className="px-2">Manage rents</Nav.Link>
-            <Nav.Link href="#advertise" className="px-2">Advertise</Nav.Link>
-            <Nav.Link href="#help"      className="px-2">Get help</Nav.Link>
+            <Nav.Link href="#manage"    className="px-2">{t('manage_rents')}</Nav.Link>
+            <Nav.Link href="#advertise" className="px-2">{t('advertise')}</Nav.Link>
+            <Nav.Link href="#help"      className="px-2">{t('get_help')}</Nav.Link>
           </Nav>
 
           {/* ── Right Side ── */}
           <Nav className="align-items-center gap-2">
 
-            {/* Language switcher — inactive */}
-            <button className="lang-btn" disabled title="Coming soon">
-              EN / AR
-            </button>
+            {/* ── Language Switcher ── */}
+            <NavDropdown
+              title={i18n.language === 'ar' ? 'اللغه' : 'Language'}
+              id="language-dropdown"
+              className="px-2"
+            >
+              <NavDropdown.Item onClick={() => handleLanguageChange('en')}>
+                English
+              </NavDropdown.Item>
+              <NavDropdown.Item onClick={() => handleLanguageChange('ar')}>
+                العربية
+              </NavDropdown.Item>
+            </NavDropdown>
 
-            {/* Guest */}
+            {/* ── Guest ── */}
             {role === 'anonymous' && <>
               <Nav.Link
-                onClick={() => navigate('/auth/LogIn')}
+                onClick={() => navigate('/auth/login')}
                 className="fw-bold text-dark me-3"
               >
-                {t('login') || 'Login'}
+                {t('login')}
               </Nav.Link>
               <Button
                 onClick={() => navigate('/auth/join')}
@@ -149,11 +167,11 @@ export default function NavBar() {
                   fontWeight: '600',
                 }}
               >
-                {t('signup') || 'Sign Up'}
+                {t('signup')}
               </Button>
             </>}
 
-            {/* Logged in */}
+            {/* ── Logged in ── */}
             {role !== 'anonymous' &&
               <Dropdown align="end">
                 <Dropdown.Toggle as="div" className="user-toggle" id="user-dropdown">
@@ -171,16 +189,14 @@ export default function NavBar() {
 
                 <Dropdown.Menu>
                   <Dropdown.Item onClick={handleDashboard}>
-                    {role === 'Agent' ? 'Agent Dashboard' : 'My Home'}
+                    {role === 'Agent' ? t('dashboard') : t('home')}
                   </Dropdown.Item>
-
-            
                   <Dropdown.Item onClick={() => navigate('/agentpannel/profile')}>
-                    Profile Settings
+                    {t('profile_settings')}
                   </Dropdown.Item>
                   <Dropdown.Divider />
                   <Dropdown.Item onClick={handleLogout} className="text-danger">
-                    Logout
+                    {t('logout')}
                   </Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>

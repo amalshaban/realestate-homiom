@@ -16,13 +16,14 @@ import { Container, Row, Col, Form, Button, InputGroup, Nav } from 'react-bootst
 import ViewProperties from "../../PropertiesModule/ViewProperties/ViewProperties.jsx";
 import Test from "../../../assets/Test.jsx"
 
-// import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 
 
 
 export default function Home() {
 
-  
+  const { t } = useTranslation();
+
   // Check auth
   const token = sessionStorage.getItem("token");
   console.log('Home - Token exists:', !!token);
@@ -49,8 +50,12 @@ export default function Home() {
   <div className="row">
     <div className="col-md-12">
          <div className="slidertext">
-           <h1 className="hero-title fw-bold mb-3">Find Your Dream Home in Saudi Arabia</h1>
-           <p className="hero-subtitle ">The Kingdom's Leading Real Estate Platform</p>
+           <h1 className="hero-title fw-bold mb-3">
+             {t('hero_title', 'Find Your Dream Home in Saudi Arabia')}
+           </h1>
+           <p className="hero-subtitle ">
+             {t('hero_subtitle', "The Kingdom's Leading Real Estate Platform")}
+           </p>
           </div>
      <Search />
   </div>

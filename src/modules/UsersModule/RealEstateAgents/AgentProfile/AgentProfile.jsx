@@ -1,17 +1,18 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { Row, Col } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { useAgentProfile } from '../useAgentData.js';
 import profileimg from '../../../../assets/imgs/profile.png';
-
-// ─── Constants ────────────────────────────────────────────────────────────────
-const BASE_IMG = 'https://realstate.niledevelopers.com/images/';
+import { BASE_URL } from '../../../../constants/EndPoints.js';
+import '../AgentPannel.css';
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AgentProfile() {
 
   const { profile, loading, error, updating, updateProfile } = useAgentProfile();
+  const { t } = useTranslation();
   const [photo,        setPhoto]        = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
 
@@ -20,7 +21,6 @@ export default function AgentProfile() {
     formState: { errors },
   } = useForm();
 
-  // ── prefill form لما الـ profile يتحمل ──
   useEffect(() => {
     if (profile) {
       reset({
@@ -38,27 +38,24 @@ export default function AgentProfile() {
   }, []);
 
   const onSubmit = useCallback(async (data) => {
-    const toastId = toast.loading('Updating profile...');
-    const success = await updateProfile(
-      { id: profile?.id, ...data },
-      photo
-    );
+    const toastId = toast.loading(t('updating_profile'));
+    const success = await updateProfile({ id: profile?.id, ...data }, photo);
     if (success) {
       toast.update(toastId, {
-        render: 'Profile updated successfully! ✅',
+        render: t('profile_updated'),
         type: 'success',
         isLoading: false,
         autoClose: 2000,
       });
     } else {
       toast.update(toastId, {
-        render: 'Failed to update profile.',
+        render: t('failed_update_profile'),
         type: 'error',
         isLoading: false,
         autoClose: 3000,
       });
     }
-  }, [profile, photo, updateProfile]);
+  }, [profile, photo, updateProfile, t]);
 
   if (loading) return (
     <div className="agent-profile-page">
@@ -71,7 +68,7 @@ export default function AgentProfile() {
 
   if (error) return (
     <div className="agent-profile-page">
-      <p style={{ color: '#e53e3e' }}>Failed to load profile.</p>
+      <p style={{ color: '#e53e3e' }}>{t('failed_load_profile')}</p>
     </div>
   );
 
@@ -79,13 +76,13 @@ export default function AgentProfile() {
     <div className="agent-profile-page">
 
       {/* ── Header ── */}
-      <h2 className="agent-profile-title">Profile Settings</h2>
-      <p className="agent-profile-subtitle">Update your agency information</p>
+      <h2 className="agent-profile-title">{t('profile_settings')}</h2>
+      <p className="agent-profile-subtitle">{t('update_agency_info')}</p>
 
       {/* ── Avatar ── */}
       <div className="agent-profile-avatar-wrapper">
         <img
-          src={photoPreview || (profile?.logoPath ? `${BASE_IMG}${profile.logoPath}` : profileimg)}
+          src={photoPreview || (profile?.logoPath ? `${BASE_URL}/images/${profile.logoPath}` : profileimg)}
           alt={profile?.nameEn}
           className="agent-profile-avatar"
         />
@@ -95,7 +92,7 @@ export default function AgentProfile() {
           <label className="agent-profile-file-wrapper">
             <input type="file" accept="image/*" onChange={handlePhotoChange} />
             <i className="fa-solid fa-camera" />
-            Change Photo
+            {t('change_photo')}
           </label>
         </div>
       </div>
@@ -105,22 +102,22 @@ export default function AgentProfile() {
 
           {/* ── Name EN ── */}
           <Col md={12}>
-            <label className="agent-profile-label">Company Name (English)</label>
+            <label className="agent-profile-label">{t('company_name_en')}</label>
             <input
               className={`agent-profile-input ${errors.nameEn ? 'is-invalid' : ''}`}
-              placeholder="Company Name"
-              {...register('nameEn', { required: 'Company name in English is required' })}
+              placeholder={t('company_name_en')}
+              {...register('nameEn', { required: t('company_name_en_required') })}
             />
             {errors.nameEn && <p className="agent-profile-error">{errors.nameEn.message}</p>}
           </Col>
 
           {/* ── Name AR ── */}
           <Col md={12}>
-            <label className="agent-profile-label">Company Name (Arabic)</label>
+            <label className="agent-profile-label">{t('company_name_ar')}</label>
             <input
               className={`agent-profile-input ${errors.nameAr ? 'is-invalid' : ''}`}
-              placeholder="اسم الشركة"
-              {...register('nameAr', { required: 'Company name in Arabic is required' })}
+              placeholder={t('company_name_ar')}
+              {...register('nameAr', { required: t('company_name_ar_required') })}
             />
             {errors.nameAr && <p className="agent-profile-error">{errors.nameAr.message}</p>}
           </Col>
@@ -128,18 +125,18 @@ export default function AgentProfile() {
         </Row>
 
         {/* ── Read-only Info ── */}
-        <p className="agent-profile-divider">Account Information</p>
+        <p className="agent-profile-divider">{t('account_information')}</p>
 
         <div className="agent-profile-info-row">
-          <span className="agent-profile-info-label">License Number</span>
+          <span className="agent-profile-info-label">{t('license_number')}</span>
           <span className="agent-profile-info-value">{profile?.licenseNumber || '—'}</span>
         </div>
         <div className="agent-profile-info-row">
-          <span className="agent-profile-info-label">CR Number</span>
+          <span className="agent-profile-info-label">{t('cr_number')}</span>
           <span className="agent-profile-info-value">{profile?.cr || '—'}</span>
         </div>
         <div className="agent-profile-info-row">
-          <span className="agent-profile-info-label">License Expiry</span>
+          <span className="agent-profile-info-label">{t('license_expiry')}</span>
           <span className="agent-profile-info-value">
             {profile?.licenseExpiryDate
               ? new Date(profile.licenseExpiryDate).toLocaleDateString('en-US', {
@@ -150,17 +147,17 @@ export default function AgentProfile() {
           </span>
         </div>
         <div className="agent-profile-info-row">
-          <span className="agent-profile-info-label">Status</span>
+          <span className="agent-profile-info-label">{t('status')}</span>
           <span className="agent-profile-info-value" style={{ color: profile?.isActive ? '#16a34a' : '#e53e3e' }}>
-            {profile?.isActive ? '✅ Active' : '❌ Inactive'}
+            {profile?.isActive ? `✅ ${t('active')}` : `❌ ${t('inactive')}`}
           </span>
         </div>
 
         {/* ── Submit ── */}
         <button type="submit" className="agent-profile-btn" disabled={updating}>
           {updating
-            ? <><span className="spinner-border spinner-border-sm" /> Updating...</>
-            : <><i className="fa-solid fa-floppy-disk" /> Save Changes</>
+            ? <><span className="spinner-border spinner-border-sm" /> {t('updating')}</>
+            : <><i className="fa-solid fa-floppy-disk" /> {t('save_changes')}</>
           }
         </button>
 

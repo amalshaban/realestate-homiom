@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { apiKey } from '../../../constants/Validations.js';
-
-const BASE_URL = 'https://realstate.niledevelopers.com';
+import { AGENT_URLs, GENERAL_URLs, LOCATIONS_URLs } from '../../../constants/EndPoints.js';
 
 const headers = () => ({
   Authorization: `Bearer ${sessionStorage.token}`,
@@ -30,10 +29,10 @@ export default function useAddProperty() {
     const fetchDropdowns = async () => {
       try {
         const [typesRes, purposeRes, rentRes, countriesRes] = await Promise.all([
-          axios.get(`${BASE_URL}/General/RealStateTypes`, { headers: headers() }),
-          axios.get(`${BASE_URL}/General/PurposeTypes`,   { headers: headers() }),
-          axios.get(`${BASE_URL}/General/RentTypes`,      { headers: headers() }),
-          axios.get(`${BASE_URL}/Locations/Countries`,    { headers: headers() }),
+          axios.get(GENERAL_URLs.RealStateTypes, { headers: headers() }),
+          axios.get(GENERAL_URLs.PurposeTypes,   { headers: headers() }),
+          axios.get(GENERAL_URLs.RentTypes,      { headers: headers() }),
+          axios.get(LOCATIONS_URLs.Countries,    { headers: headers() }),
         ]);
         setRealStateTypes(typesRes.data   || []);
         setPurposeTypes(purposeRes.data   || []);
@@ -51,7 +50,7 @@ export default function useAddProperty() {
     setDistricts([]);
     if (!countryId || countryId === '0') return;
     try {
-      const res = await axios.get(`${BASE_URL}/Locations/Cities?id=${countryId}`, { headers: headers() });
+      const res = await axios.get(LOCATIONS_URLs.Cities + countryId, { headers: headers() });
       setCities(res.data || []);
     } catch {}
   }, []);
@@ -60,7 +59,7 @@ export default function useAddProperty() {
     setDistricts([]);
     if (!cityId || cityId === '0') return;
     try {
-      const res = await axios.get(`${BASE_URL}/Locations/Districts?id=${cityId}`, { headers: headers() });
+      const res = await axios.get(LOCATIONS_URLs.Districts + cityId, { headers: headers() });
       setDistricts(res.data || []);
     } catch {}
   }, []);
@@ -88,7 +87,7 @@ export default function useAddProperty() {
         formData.append(`images[${idx}].imageUrl`, img);
       });
 
-      await axios.post(`${BASE_URL}/Agent/Property/Add`, formData, {
+      await axios.post(AGENT_URLs.addProperty, formData, {
         headers: multipartHeaders(),
       });
       return true;

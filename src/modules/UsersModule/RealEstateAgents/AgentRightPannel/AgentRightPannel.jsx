@@ -1,14 +1,14 @@
-
 import React from 'react';
- import {useAgentProfile} from "../useAgentData.js";
+import { useTranslation } from 'react-i18next';
+import { useAgentProfile } from '../useAgentData.js';
+import { BASE_URL } from '../../../../constants/EndPoints.js';
 import '../../RealEstateAgents/AgentPannel.css';
 
-
-const BASE_IMG = 'https://realstate.niledevelopers.com/images/';
-
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function AgentRightPanel() {
 
   const { profile, loading, error } = useAgentProfile();
+  const { t } = useTranslation();
 
   if (loading) return (
     <div className="agent-right-panel">
@@ -21,7 +21,7 @@ export default function AgentRightPanel() {
 
   if (error) return (
     <div className="agent-right-panel">
-      <p style={{ fontSize: '13px', color: '#e74c3c' }}>Failed to load profile</p>
+      <p style={{ fontSize: '13px', color: '#e74c3c' }}>{t('failed_load_profile')}</p>
     </div>
   );
 
@@ -32,7 +32,7 @@ export default function AgentRightPanel() {
       {profile?.isActive && (
         <div className="arp-verified-badge">
           <i className="fa-solid fa-circle-check" />
-          RE-Broker Verified
+          {t('re_broker_verified')}
         </div>
       )}
 
@@ -40,31 +40,31 @@ export default function AgentRightPanel() {
       <div className="arp-logo-card">
         {profile?.logoPath && (
           <img
-            src={`${BASE_IMG}${profile.logoPath}`}
+            src={`${BASE_URL}/images/${profile.logoPath}`}
             alt={profile.nameEn}
             loading="lazy"
           />
         )}
         <div className="arp-logo-card-overlay">
-          <p className="arp-logo-card-label">Live Preview</p>
-          <p className="arp-logo-card-name">{profile?.nameEn || 'Agent Office'}</p>
+          <p className="arp-logo-card-label">{t('live_preview')}</p>
+          <p className="arp-logo-card-name">{profile?.nameEn || t('agent_office')}</p>
         </div>
       </div>
 
       {/* ── Info Rows ── */}
       <div>
         <div className="arp-info-row">
-          <span className="arp-info-label">License Number</span>
+          <span className="arp-info-label">{t('license_number')}</span>
           <span className="arp-info-value">{profile?.licenseNumber || '—'}</span>
         </div>
         <div className="arp-info-row">
-          <span className="arp-info-label">CR Number</span>
+          <span className="arp-info-label">{t('cr_number')}</span>
           <span className="arp-info-value">{profile?.cr || '—'}</span>
         </div>
         <div className="arp-info-row">
-          <span className="arp-info-label">Verification Tier</span>
+          <span className="arp-info-label">{t('verification_tier')}</span>
           <span className="arp-info-value elite">
-            <i className="fa-solid fa-circle-check" /> Elite
+            <i className="fa-solid fa-circle-check" /> {t('elite')}
           </span>
         </div>
       </div>
@@ -73,17 +73,15 @@ export default function AgentRightPanel() {
       <div className="arp-tip-box">
         <i className="fa-solid fa-circle-info" />
         <div>
-          <p className="arp-tip-title">Agent Tip</p>
-          <p className="arp-tip-text">
-            Listing as a Licensed Agent increases lead quality by up to 45% in the Riyadh market.
-          </p>
+          <p className="arp-tip-title">{t('agent_tip')}</p>
+          <p className="arp-tip-text">{t('agent_tip_text')}</p>
         </div>
       </div>
 
       {/* ── License Box ── */}
       <div className="arp-license-box">
         <i className="fa-solid fa-qrcode" />
-        <p className="arp-license-text">Ejar Contract Auto-Fill Ready</p>
+        <p className="arp-license-text">{t('ejar_ready')}</p>
       </div>
 
     </div>

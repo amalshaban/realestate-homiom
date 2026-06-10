@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { apiKey } from '../../../constants/Validations.js';
-
-const BASE_URL = 'https://realstate.niledevelopers.com';
-
+import { AGENT_URLs } from '../../../constants/EndPoints.js';
 const headers = () => ({
   Authorization: `Bearer ${sessionStorage.token}`,
   apiKey,
@@ -22,7 +20,7 @@ export function useAgentStats() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${BASE_URL}/Agent/Dashboard/Stats`, {
+      const response = await axios.get(AGENT_URLs.Stats, {
         headers: headers(),
       });
       setStats(response.data);
@@ -51,7 +49,7 @@ export function useAgentProfile() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${BASE_URL}/Agent/Profile`, {
+      const response = await axios.get(AGENT_URLs.Profile, {
         headers: headers(),
       });
       setProfile(response.data);
@@ -71,7 +69,7 @@ export function useAgentProfile() {
       formData.append('nameEn', data.nameEn);
       if (photo) formData.append('photo', photo);
 
-      await axios.put(`${BASE_URL}/agent/group/update`, formData, {
+      await axios.put(AGENT_URLs.ProfileUpdate, formData, {
         headers: {
           Authorization: `Bearer ${sessionStorage.token}`,
           apiKey,
@@ -102,7 +100,7 @@ export function useAgentProperties() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${BASE_URL}/agent/properties`, {
+      const response = await axios.get(AGENT_URLs.Properties, {
         headers: headers(),
       });
       setProperties(response.data.properties || response.data || []);
@@ -132,7 +130,7 @@ export function useVisitRequests() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${BASE_URL}/Agent/VisitRequests`, {
+      const response = await axios.get(AGENT_URLs.VisitRequests, {
         headers: headers(),
       });
       setRequests(response.data || []);
@@ -146,7 +144,7 @@ export function useVisitRequests() {
   const fetchSuggestedDates = useCallback(async (visitRequestId) => {
     try {
       const response = await axios.post(
-        `${BASE_URL}/Agent/VisitRequests/SuggestedDates/List`,
+        AGENT_URLs.SuggestedDatesList,
         { visitRequestId },
         { headers: headers() }
       );
@@ -158,7 +156,7 @@ export function useVisitRequests() {
     setAdding(propertyVisitRequestId);
     try {
       await axios.post(
-        `${BASE_URL}/Agent/VisitRequests/SuggestedDates`,
+        AGENT_URLs.SuggestedDates,
         { propertyVisitRequestId, suggestedDateTime },
         { headers: headers() }
       );
@@ -172,7 +170,7 @@ export function useVisitRequests() {
     setDeleting(suggestedDateId);
     try {
       await axios.post(
-        `${BASE_URL}/Agent/VisitRequests/SuggestedDates/Delete`,
+        AGENT_URLs.SuggestedDatesDelete,
         { suggestedDateId },
         { headers: headers() }
       );
@@ -204,7 +202,7 @@ export function usePurchaseRequests() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${BASE_URL}/Agent/PurchaseRequests`, {
+      const response = await axios.get(AGENT_URLs.PurchaseRequests, {
         headers: headers(),
       });
       setRequests(response.data || []);
@@ -219,7 +217,7 @@ export function usePurchaseRequests() {
     setAccepting(purchaseRequestId);
     try {
       await axios.post(
-        `${BASE_URL}/Agent/PurchaseRequests/Accept`,
+        AGENT_URLs.PurchaseAccept,
         { purchaseRequestId },
         { headers: headers() }
       );
@@ -249,7 +247,7 @@ export function useRentalRequests() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${BASE_URL}/Agent/RentalRequests`, {
+      const response = await axios.get(AGENT_URLs.RentalRequests, {
         headers: headers(),
       });
       setRequests(response.data || []);
@@ -264,7 +262,7 @@ export function useRentalRequests() {
     setAccepting(rentalRequestId);
     try {
       await axios.post(
-        `${BASE_URL}/Agent/RentalRequests/Accept`,
+        AGENT_URLs.RentalAccept,
         { rentalRequestId },
         { headers: headers() }
       );
@@ -280,7 +278,7 @@ export function useRentalRequests() {
     setCreating(true);
     try {
       await axios.post(
-        `${BASE_URL}/Agent/Rent/Create`,
+        AGENT_URLs.RentCreate,
         data,
         { headers: headers() }
       );
@@ -315,7 +313,7 @@ export function useRents() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${BASE_URL}/Agent/Rents`, {
+      const response = await axios.get(AGENT_URLs.Rents, {
         headers: headers(),
       });
       setRents(response.data || []);

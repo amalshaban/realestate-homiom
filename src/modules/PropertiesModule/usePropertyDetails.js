@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { apiKey } from '../../constants/Validations.js';
-
-const BASE_URL = 'https://realstate.niledevelopers.com';
+import { PROPERTIES_URLS, USERS_URLs } from '../../constants/EndPoints.js';
 
 const headers = () => ({
   Authorization: `Bearer ${sessionStorage.token}`,
@@ -24,7 +23,7 @@ export default function usePropertyDetails(id) {
       setLoading(true);
       setError(null);
       try {
-        const response = await axios.get(`${BASE_URL}/properties/${id}`, {
+        const response = await axios.get(`${PROPERTIES_URLS.propertyDetails}/${id}`, {
           headers: headers(),
         });
         setProperty(response.data.property);
@@ -40,7 +39,8 @@ export default function usePropertyDetails(id) {
   const sendVisitRequest = useCallback(async () => {
     setSubmitting(true);
     try {
-      await axios.post(`${BASE_URL}/User/request-visit`,
+      await axios.post(
+        USERS_URLs.VisitRequest,
         { propertyId: id },
         { headers: headers() }
       );
@@ -55,7 +55,8 @@ export default function usePropertyDetails(id) {
   const sendPurchaseRequest = useCallback(async (offeredPrice, notes) => {
     setSubmitting(true);
     try {
-      await axios.post(`${BASE_URL}/User/PurchaseRequests`,
+      await axios.post(
+        USERS_URLs.PurchaseRequests,
         { propertyId: id, offeredPrice, notes },
         { headers: headers() }
       );
@@ -70,7 +71,8 @@ export default function usePropertyDetails(id) {
   const sendRentalRequest = useCallback(async (offeredPrice, notes, rentTypeId) => {
     setSubmitting(true);
     try {
-      await axios.post(`${BASE_URL}/User/RentalRequests`,
+      await axios.post(
+        USERS_URLs.RentalRequests,
         { propertyId: id, rentTypeId, offeredPrice, notes },
         { headers: headers() }
       );

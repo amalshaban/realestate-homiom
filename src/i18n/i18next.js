@@ -8,6 +8,7 @@ i18n
   .use(LanguageDetector) // To detect user language
   .use(initReactI18next) // Passes i18n instance to react-i18next
   .init({
+    supportedLngs: ['en', 'ar'],
     fallbackLng: 'en', // Default language if detection fails
     debug: false,
     interpolation: {
@@ -22,5 +23,14 @@ i18n
       lookupCookie: 'i18next',
     },
   });
+
+// Keep document direction and language attributes synced with the selected locale.
+i18n.on('languageChanged', (lng) => {
+  document.documentElement.lang = lng;
+  document.documentElement.dir = lng === 'ar' ? 'rtl' : 'ltr';
+});
+
+document.documentElement.lang = i18n.language;
+document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
 
 export default i18n;

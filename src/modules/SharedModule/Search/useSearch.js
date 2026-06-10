@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
-import { apiKey } from '../../../constants/Validations';
-
-const BASE_URL = 'https://realstate.niledevelopers.com';
+import { apiKey } from '../../../constants/Validations.js';
+import { PROPERTIES_URLS } from '../../../constants/EndPoints.js';
 
 const headers = () => ({
   Authorization: `Bearer ${sessionStorage.token}`,
@@ -22,7 +21,7 @@ export default function useSearch() {
   useEffect(() => {
     const fetchPrices = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/properties/active`, {
+        const response = await axios.get(PROPERTIES_URLS.activeProperties, {
           headers: headers(),
         });
         const properties = response.data.properties || response.data || [];
@@ -57,7 +56,7 @@ export default function useSearch() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post(`${BASE_URL}/properties/search`, {
+      const response = await axios.post(PROPERTIES_URLS.propertySearch, {
         countryId:           params.countryId       || 0,
         cityId:              0,
         districtId:          0,

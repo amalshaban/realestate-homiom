@@ -1,11 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Row, Col } from 'react-bootstrap';
 import useProperties from './useProperties.js';
-import '../../PropertiesModule/PropertyDetails.css';
-
-// ─── Constants ────────────────────────────────────────────────────────────────
-const BASE_IMG = 'https://realstate.niledevelopers.com';
+import { BASE_URL } from '../../../constants/EndPoints.js';
+import '../PropertyDetails.css';
 
 // ─── Sub Components ───────────────────────────────────────────────────────────
 const SkeletonCard = () => (
@@ -35,7 +34,7 @@ const ImageSlider = ({ images, title }) => {
   return (
     <div className="card-img-wrapper">
       <img
-        src={`${BASE_IMG}${images[current]}`}
+        src={`${BASE_URL}${images[current]}`}
         alt={title}
         loading="lazy"
         decoding="async"
@@ -58,6 +57,7 @@ const ImageSlider = ({ images, title }) => {
 };
 
 const PropertyCard = ({ property, onView }) => {
+  const { t } = useTranslation();
   const images = property.image ? [property.image] : [];
 
   return (
@@ -65,7 +65,7 @@ const PropertyCard = ({ property, onView }) => {
       <div style={{ position: 'relative' }}>
         <ImageSlider images={images} title={property.title} />
         <span className={`badge-listing ${property.forRent ? 'badge-for-rent' : 'badge-for-sale'}`}>
-          {property.forRent ? 'For Rent' : 'For Sale'}
+          {property.forRent ? t('for_rent') : t('for_sale')}
         </span>
         <button className="heart-btn" onClick={e => e.stopPropagation()}>
           <i className="fa-regular fa-heart" />
@@ -76,7 +76,7 @@ const PropertyCard = ({ property, onView }) => {
         <div className="property-price">
           {property.price?.toLocaleString()} SAR
           {property.forRent && (
-            <span style={{ fontSize: '13px', fontWeight: 400, color: '#888' }}> /month</span>
+            <span style={{ fontSize: '13px', fontWeight: 400, color: '#888' }}> /{t('month')}</span>
           )}
         </div>
         <div className="d-flex align-items-center justify-content-between mb-1">
@@ -105,6 +105,7 @@ const PropertyCard = ({ property, onView }) => {
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function ViewProperties() {
 
+  const { t } = useTranslation();
   const { properties, loading, error, loadingMore, hasMore, total, loadMore, sendView } = useProperties();
   const [viewMode, setViewMode] = useState('grid');
   const navigate = useNavigate();
@@ -120,21 +121,21 @@ export default function ViewProperties() {
       {/* ── Header ── */}
       <div className="vp-header d-flex align-items-start justify-content-between mb-4">
         <div>
-          <h3>Featured Properties</h3>
-          <p>{total} properties available</p>
+          <h3>{t('featured_properties')}</h3>
+          <p>{total} {t('properties_available')}</p>
         </div>
         <div className="d-flex gap-2">
           <button
             className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
             onClick={() => setViewMode('grid')}
-            title="Grid view"
+            title={t('grid_view')}
           >
             <i className="fa-solid fa-grip" />
           </button>
           <button
             className={`view-toggle-btn ${viewMode === 'map' ? 'active' : ''}`}
             onClick={() => setViewMode('map')}
-            title="Map view"
+            title={t('map_view')}
           >
             <i className="fa-solid fa-map" />
           </button>
@@ -144,7 +145,7 @@ export default function ViewProperties() {
       {/* ── Error ── */}
       {error && (
         <div className="alert alert-danger">
-          Failed to load properties. Please try again.
+          {t('failed_load_properties')}
         </div>
       )}
 
@@ -169,7 +170,7 @@ export default function ViewProperties() {
           ) : (
             <div className="empty-state">
               <i className="fa-solid fa-house-circle-xmark" />
-              <p>No properties found</p>
+              <p>{t('no_properties_found')}</p>
             </div>
           )}
 
@@ -182,8 +183,8 @@ export default function ViewProperties() {
                 disabled={loadingMore}
               >
                 {loadingMore
-                  ? <><span className="spinner-border spinner-border-sm me-2" />Loading...</>
-                  : 'Load More Properties'
+                  ? <><span className="spinner-border spinner-border-sm me-2" />{t('loading')}</>
+                  : t('load_more')
                 }
               </button>
             </Col>
@@ -195,7 +196,7 @@ export default function ViewProperties() {
       {!loading && !error && viewMode === 'map' && (
         <div className="d-flex align-items-center justify-content-center"
           style={{ height: '400px', background: '#f5f5f5', borderRadius: '16px' }}>
-          <p className="text-muted">Map view coming soon</p>
+          <p className="text-muted">{t('map_coming_soon')}</p>
         </div>
       )}
 

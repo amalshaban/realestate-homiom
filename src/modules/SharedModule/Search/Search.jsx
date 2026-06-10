@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { Authorization, apiKey } from '../../../constants/Validations';
-import { LOCATIONS_URLs } from '../../../constants/EndPoints';
+import { LOCATIONS_URLs, GENERAL_URLs, BASE_URL } from '../../../constants/EndPoints';
 import useSearch from './useSearch.js';
 
-
 // ─── Constants ────────────────────────────────────────────────────────────────
-const BASE_IMG = 'https://realstate.niledevelopers.com';
-const BASE_URL = 'https://realstate.niledevelopers.com';
+const BASE_IMG = BASE_URL;
 
 // ─── Sub Components ───────────────────────────────────────────────────────────
 const SkeletonResults = () => (
@@ -27,6 +26,8 @@ const SkeletonResults = () => (
 );
 
 const ResultCard = ({ property, onView }) => {
+  const { t } = useTranslation();
+
   const imageUrl = property.mainImageUrl
     ? `${BASE_IMG}${property.mainImageUrl}`
     : `${BASE_IMG}/${property.image}`;
@@ -42,9 +43,8 @@ const ResultCard = ({ property, onView }) => {
             onError={e => { e.target.style.display = 'none'; }}
           />
         </div>
-
         <span className={`badge-listing ${property.forRent ? 'badge-for-rent' : 'badge-for-sale'}`}>
-          {property.forRent ? 'For Rent' : 'For Sale'}
+          {property.forRent ? t('for_rent') : t('for_sale')}
         </span>
       </div>
 
@@ -52,22 +52,20 @@ const ResultCard = ({ property, onView }) => {
         <div className="property-price">
           {property.price?.toLocaleString()} SAR
           {property.forRent && (
-            <span style={{ fontSize: '13px', fontWeight: 400, color: '#888' }}> /month</span>
+            <span style={{ fontSize: '13px', fontWeight: 400, color: '#888' }}> /{t('month')}</span>
           )}
         </div>
-
         <div className="d-flex align-items-center justify-content-between mb-1">
           <div className="property-location">
             <i className="fa-solid fa-location-dot" style={{ color: '#0088BD' }} />
             {property.district}, {property.city}
           </div>
-          <span className="property-type-badge">{property.realStatePurpose || property.type || 'Property'}</span>
+          <span className="property-type-badge">{property.realStatePurpose || t('property')}</span>
         </div>
-
         <div className="property-specs">
-          {property.bedrooms > 0 && <span><i className="fa-solid fa-bed" /> {property.bedrooms}</span>}
-          {property.bathrooms > 0 && <span><i className="fa-solid fa-bath" /> {property.bathrooms}</span>}
-          {property.area > 0 && <span><i className="fa-solid fa-vector-square" /> {property.area} m²</span>}
+          {property.bedrooms  > 0 && <span><i className="fa-solid fa-bed"           /> {property.bedrooms}</span>}
+          {property.bathrooms > 0 && <span><i className="fa-solid fa-bath"          /> {property.bathrooms}</span>}
+          {property.area      > 0 && <span><i className="fa-solid fa-vector-square" /> {property.area} m²</span>}
         </div>
       </div>
     </div>
@@ -77,6 +75,7 @@ const ResultCard = ({ property, onView }) => {
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function Search() {
 
+  const { t } = useTranslation();
   const [listingType,    setListingType]    = useState('buy');
   const [countries,      setCountries]      = useState([]);
   const [realStateTypes, setRealStateTypes] = useState([]);
@@ -94,12 +93,12 @@ export default function Search() {
       try {
         const [countriesRes, typesRes] = await Promise.all([
           axios.get(LOCATIONS_URLs.Countries, Authorization),
-          axios.get(`${BASE_URL}/General/RealStateTypes`, {
+          axios.get(GENERAL_URLs.RealStateTypes, {
             headers: { Authorization: `Bearer ${sessionStorage.token}`, apiKey },
           }),
         ]);
-        setCountries(countriesRes.data   || []);
-        setRealStateTypes(typesRes.data  || []);
+        setCountries(countriesRes.data  || []);
+        setRealStateTypes(typesRes.data || []);
       } catch {}
     };
     fetchDropdowns();
@@ -149,13 +148,13 @@ export default function Search() {
               className={`toggle-btn ${listingType === 'buy' ? 'active' : ''}`}
               onClick={() => setListingType('buy')}
             >
-              Buy
+              {t('buy')}
             </button>
             <button
               className={`toggle-btn ${listingType === 'rent' ? 'active' : ''}`}
               onClick={() => setListingType('rent')}
             >
-              Rent
+              {t('rent')}
             </button>
           </div>
 
@@ -168,7 +167,7 @@ export default function Search() {
                 <div className="search-box-wrapper">
                   <select className="form-select border-0 bg-transparent"
                     value={countryId} onChange={e => setCountryId(e.target.value)}>
-                    <option value="">Select Country</option>
+                    <option value="">{t('select_country')}</option>
                     {countries.map(c => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
@@ -181,9 +180,9 @@ export default function Search() {
                 <div className="search-box-wrapper">
                   <select className="form-select border-0 bg-transparent"
                     value={typeId} onChange={e => setTypeId(e.target.value)}>
-                    <option value="">Any Type</option>
-                    {realStateTypes.map(t => (
-                      <option key={t.id} value={t.id}>{t.name}</option>
+                    <option value="">{t('any_type')}</option>
+                    {realStateTypes.map(type => (
+                      <option key={type.id} value={type.id}>{type.name}</option>
                     ))}
                   </select>
                 </div>
@@ -205,7 +204,7 @@ export default function Search() {
               <div className="col-lg-2 col-md-6">
                 <button type="submit" className="btn-search-main">
                   <i className="fa-solid fa-magnifying-glass" />
-                  Search
+                  {t('search')}
                 </button>
               </div>
 
@@ -222,10 +221,10 @@ export default function Search() {
             {/* Header */}
             <div className="search-modal-header">
               <div>
-                <p className="search-modal-title">Search Results</p>
+                <p className="search-modal-title">{t('search_results')}</p>
                 {!loading && (
                   <p className="search-modal-count">
-                    {total} {total === 1 ? 'property' : 'properties'} found
+                    {total} {total === 1 ? t('property') : t('properties')} {t('found')}
                   </p>
                 )}
               </div>
@@ -242,7 +241,7 @@ export default function Search() {
               {error && (
                 <div className="search-modal-empty">
                   <i className="fa-solid fa-circle-exclamation" style={{ color: '#e53e3e' }} />
-                  <p>Failed to load results. Please try again.</p>
+                  <p>{t('failed_load_results')}</p>
                 </div>
               )}
 
@@ -261,7 +260,7 @@ export default function Search() {
               {!loading && !error && results.length === 0 && (
                 <div className="search-modal-empty">
                   <i className="fa-solid fa-house-circle-xmark" />
-                  <p>No properties found matching your search.</p>
+                  <p>{t('no_properties_found')}</p>
                 </div>
               )}
 

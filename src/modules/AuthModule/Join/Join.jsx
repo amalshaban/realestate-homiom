@@ -1,84 +1,88 @@
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import '../../AuthModule/auth.css';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const SELECT_OPTIONS = [
   {
-    id: 'personal',
+    id:   'personal',
     icon: 'fa-solid fa-user',
-    title: 'Personal Use',
-    desc: 'Browse, save, and find your dream home with ease',
+    key:  'personal_use',
+    descKey: 'personal_use_desc',
   },
   {
-    id: 'professional',
+    id:   'professional',
     icon: 'fa-solid fa-briefcase',
-    title: 'Professional',
-    desc: 'List properties, manage clients, and grow your business',
+    key:  'professional',
+    descKey: 'professional_desc',
   },
 ];
 
 const ROLE_OPTIONS = [
   {
-    id: 'agent',
-    icon: 'fa-solid fa-user-gear',
-    title: 'Real Estate Agent',
-    desc: 'List properties, manage clients, and close deals',
-    route: '/auth/join/SignUpAgent',
+    id:    'agent',
+    icon:  'fa-solid fa-user-gear',
+    key:   'real_estate_agent',
+    descKey: 'agent_desc',
+    route: 'auth/join/signupagent',
   },
-  {
-    id: 'owner',
-    icon: 'fa-solid fa-house',
-    title: 'Property Owner/Seller',
-    desc: 'List your property and connect with buyers',
-    route: '/auth/join/SignUpOwner',
-  },
-  {
-    id: 'developer',
-    icon: 'fa-solid fa-building',
-    title: 'Real Estate Developer',
-    desc: 'Showcase projects and manage developments',
-    route: '/auth/join/SignUpDeveloper',
-  },
+  // {
+  //   id:    'owner',
+  //   icon:  'fa-solid fa-house',
+  //   key:   'property_owner',
+  //   descKey: 'owner_desc',
+  //   route: '/auth/SignUpOwner',
+  // },
+  // {
+  //   id:    'developer',
+  //   icon:  'fa-solid fa-building',
+  //   key:   'real_estate_developer',
+  //   descKey: 'developer_desc',
+  //   route: 'auth/join/SignUpDeveloper',
+  // },
 ];
 
 // ─── Sub Components ───────────────────────────────────────────────────────────
-const OptionCard = ({ option, selected, onSelect }) => (
+const OptionCard = ({ option, selected, onSelect, t }) => (
   <div
     className={`signup-option-card ${selected === option.id ? 'selected' : ''}`}
     onClick={() => onSelect(option.id)}
   >
     <i className={option.icon} />
-    <h6>{option.title}</h6>
-    <p>{option.desc}</p>
+    <h6>{t(option.key)}</h6>
+    <p>{t(option.descKey)}</p>
   </div>
 );
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function SignUp() {
 
+  const { t } = useTranslation();
   const [view,     setView]     = useState('select');
   const [selected, setSelected] = useState(null);
   const navigate = useNavigate();
 
+
   const handleContinue = useCallback(() => {
-    if (!selected) return;
+  if (!selected) return;
 
-    if (view === 'select') {
-      if (selected === 'personal') {
-        navigate('/auth/join/SignUpNormal');
-      } else {
-        setSelected(null);
-        setView('role');
-      }
-      return;
+  if (view === 'select') {
+    if (selected === 'personal') {
+      navigate('auth/join/signupnormal');
+    } else {
+      setSelected(null);
+      setView('role');
     }
+    return;
+  }
 
-    if (view === 'role') {
-      const role = ROLE_OPTIONS.find(r => r.id === selected);
-      navigate(role.route);
-    }
-  }, [view, selected, navigate]);
+  if (view === 'role') {
+    const role = ROLE_OPTIONS.find(r => r.id === selected);
+    if (!role) return; // ✅ حماية من undefined
+    navigate(role.route);
+  }
+}, [view, selected, navigate]);
 
   const handleBack = useCallback(() => {
     setSelected(null);
@@ -91,7 +95,7 @@ export default function SignUp() {
   return (
     <div className="signup-page">
 
-      {/* ── Logo & Title ── */}
+      {/* ── Logo ── */}
       <div className="text-center mb-4">
         <div className="mb-2">
           <i className="fa-solid fa-house" style={{ fontSize: '28px', color: '#0088BD' }} />
@@ -99,14 +103,14 @@ export default function SignUp() {
             Homiom
           </span>
         </div>
-        <h2 className="signup-title">Create Your Account</h2>
-        <p className="signup-subtitle">Join Saudi Arabia's leading real estate platform</p>
+        <h2 className="signup-title">{t('create_account')}</h2>
+        <p className="signup-subtitle">{t('signup_subtitle')}</p>
       </div>
 
       {/* ── Card ── */}
       <div className={`signup-card ${isWide ? 'wide' : ''}`}>
 
-        {/* ── Progress Bar ── */}
+        {/* ── Progress ── */}
         <div className="signup-progress">
           <div className="step-circle active">1</div>
           <div style={{ flex: 1, height: '3px', background: '#e0e0e0', borderRadius: '2px', minWidth: 0 }} />
@@ -115,13 +119,10 @@ export default function SignUp() {
 
         {/* ── Step Title ── */}
         <h3 className="signup-step-title">
-          {view === 'select' ? 'How will you use Homiom?' : 'Select Your Role'}
+          {view === 'select' ? t('how_use_homiom') : t('select_role')}
         </h3>
         <p className="signup-step-subtitle">
-          {view === 'select'
-            ? 'Choose the option that best describes you'
-            : 'Choose the account type that best describes you'
-          }
+          {view === 'select' ? t('choose_best_option') : t('choose_account_type')}
         </p>
 
         {/* ── Options ── */}
@@ -132,6 +133,7 @@ export default function SignUp() {
               option={option}
               selected={selected}
               onSelect={setSelected}
+              t={t}
             />
           ))}
         </div>
@@ -141,12 +143,12 @@ export default function SignUp() {
           <span>
             {view === 'select' ? (
               <>
-                Already have an account?{' '}
-                <Link to="/auth/join">Login</Link>
+                {t('already_have_account')}{' '}
+                <Link to="/auth/join">{t('login')}</Link>
               </>
             ) : (
               <span className="signup-back" onClick={handleBack}>
-                <i className="fa-solid fa-arrow-left me-1" /> Back
+                <i className="fa-solid fa-arrow-left me-1" /> {t('back')}
               </span>
             )}
           </span>
@@ -155,7 +157,7 @@ export default function SignUp() {
             onClick={handleContinue}
             disabled={!selected}
           >
-            Continue <i className="fa-solid fa-arrow-right" />
+            {t('continue')} <i className="fa-solid fa-arrow-right" />
           </button>
         </div>
 
@@ -163,10 +165,10 @@ export default function SignUp() {
 
       {/* ── Terms ── */}
       <p className="signup-terms">
-        By signing up, you agree to our{' '}
-        <Link to="/terms">Terms of Service</Link>
-        {' '}and{' '}
-        <Link to="/privacy">Privacy Policy</Link>
+        {t('signup_agree')}{' '}
+        <Link to="/terms">{t('terms_of_service')}</Link>
+        {' '}{t('and')}{' '}
+        <Link to="/privacy">{t('privacy_policy')}</Link>
       </p>
 
     </div>

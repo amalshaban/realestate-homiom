@@ -1,485 +1,254 @@
-import React, { useEffect, useState } from 'react'
-import { apiKey, Authorization, AuthorizedToken, FieldValidation } from '../../../../constants/Validations';
-import axios from 'axios';
-import { toast } from 'react-toastify';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { Row, Col } from 'react-bootstrap';
+import { toast } from 'react-toastify';
+import axios from 'axios';
+import { apiKey } from '../../../../constants/Validations.js';
+import { AGENT_URLs, GENERAL_URLs, LOCATIONS_URLs, BASE_URL } from '../../../../constants/EndPoints.js';
 
+// ─── Constants ────────────────────────────────────────────────────────────────
+const headers = () => ({
+  Authorization: `Bearer ${sessionStorage.token}`,
+  apiKey,
+  'Content-Type': 'application/json',
+});
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function AddRent() {
-const [existingRent, setExistingRent] = useState(null);
 
-  const [rentRequests, setRentRequests] = useState([]);
+  const { t } = useTranslation();
+
+  const [properties,    setProperties]    = useState([]);
+  const [rentRequests,  setRentRequests]  = useState([]);
+  const [rentTypes,     setRentTypes]     = useState([]);
+  const [nationalities, setNationalities] = useState([]);
+  const [nationalTypes, setNationalTypes] = useState([]);
+  const [existingRent,  setExistingRent]  = useState(null);
+  const [submitting,    setSubmitting]    = useState(false);
+
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm({ mode: 'onBlur' });
+
+  // ── Fetch all dropdowns ──
   useEffect(() => {
-    const getRentRequests = async () => {
+    const fetchAll = async () => {
       try {
-        const response = await axios.get(
-          'https://realstate.niledevelopers.com/Agent/RentalRequests',
-          AuthorizedToken
-        );
-        setRentRequests(response.data);
-  console.log(response.data);
-      } catch (error) {
-        console.error(error.response?.data || error.message);
-      }
+        const [propsRes, rentReqRes, rentTypesRes, natRes, natTypesRes] = await Promise.all([
+          axios.get(AGENT_URLs.Properties,                                    { headers: headers() }),
+          axios.get(AGENT_URLs.RentalRequests,                                { headers: headers() }),
+          axios.get(GENERAL_URLs.RentTypes,                                   { headers: headers() }),
+          axios.get(`${BASE_URL}/Locations/Nationalities`,                    { headers: headers() }),
+          axios.get(`${BASE_URL}/General/NationalTypes`,                      { headers: headers() }),
+        ]);
+        setProperties(propsRes.data.properties   || propsRes.data   || []);
+        setRentRequests(rentReqRes.data           || []);
+        setRentTypes(rentTypesRes.data            || []);
+        setNationalities(natRes.data              || []);
+        setNationalTypes(natTypesRes.data         || []);
+      } catch {}
     };
-    getRentRequests();
+    fetchAll();
   }, []);
 
-
-   const [nationalTypes, setNationalTypes] = useState([]);
-  useEffect(() => {
-    const getNationalTypes = async () => {
-      try {
-        const response = await axios.get(
-          'https://realstate.niledevelopers.com/General/NationalTypes',
-          AuthorizedToken
-        );
-        setNationalTypes(response.data);
-  console.log(response.data);
-      } catch (error) {
-        console.error(error.response?.data || error.message);
-      }
-    };
-    getNationalTypes();
-  }, []);
-
-
-
-const handlePropertyRent = (propertyId, rentRequests) => {
-  const id = Number(propertyId);
-
-  const rent = rentRequests.find(
-    (r) => r.propertyId === id
-  );
-
-  if (rent) {
-    // ✅ موجود → نملأ القيم
-    setExistingRent(rent);
-    setValue("rentRequestId", rent.requestId);
-    setValue("fullName", rent.userName);
-    setValue("mobile", rent.userPhone);
-    
-    setValue("rentTypeId", rent.rentTypeId);
-  } else {
-    // ❌ مش موجود → نفرغ القيم + فتح الحقول
-    setExistingRent(null);
-    setValue("rentRequestId", "");
-    setValue("fullName", "");
-    setValue("mobile", "");
-    setValue("rentTypeId", "");
-  }
-};
-
-
-
-
-       const [properties, setproperties] = useState([]);
-     const getProperties = async ()=> {
-      try {  
-       let response = await axios.get("https://realstate.niledevelopers.com/agent/properties", 
-        {
-     headers: { 
-  Authorization: `Bearer ${sessionStorage.token}`,
-  'apiKey': apiKey,
-  "Content-Type": 'application/json',
-     
-    } }
-       );  
-    setproperties(response.data.properties);
-      } catch (error) {
-        console.error('Error:', error.response?.data || error.message);
-      }
+  // ── Handle Property Select ──
+  const handlePropertyRent = useCallback((propertyId) => {
+    const rent = rentRequests.find(r => r.propertyId === Number(propertyId));
+    if (rent) {
+      setExistingRent(rent);
+      setValue('rentRequestId', rent.requestId);
+      setValue('fullName',      rent.userName);
+      setValue('mobile',        rent.userPhone);
+      setValue('rentTypeId',    rent.rentTypeId);
+    } else {
+      setExistingRent(null);
+      setValue('rentRequestId', '');
+      setValue('fullName',      '');
+      setValue('mobile',        '');
+      setValue('rentTypeId',    '');
     }
-    useEffect(()=>{  
-    getProperties()
-    }, []);
+  }, [rentRequests, setValue]);
 
-       const [country, setCountry] = useState([]);
-     const getCountry = async ()=> {
-      try {  
-       let response = await axios.get("https://realstate.niledevelopers.com/Locations/Nationalities", Authorization);  
-    setCountry(response.data);
-      } catch (error) {
-        console.error('Error:', error.response?.data || error.message);
-      }
-    }
-    useEffect(()=>{  
-    getCountry()
-    }, []);
-
-
-       const [rentTypes, setRentTypes] = useState([]);
-     const getRentTypes = async ()=> {
-      try {  
-       let response = await axios.get("https://realstate.niledevelopers.com/General/RentTypes", Authorization);  
-    setRentTypes(response.data);
-    console.log(response.data);
-      } catch (error) {
-        console.error('Error:', error.response?.data || error.message);
-      }
-    }
-    useEffect(()=>{  
-    getRentTypes()
-    }, []);
-
- const {
-  register,
-  handleSubmit,
-  formState: { errors },
-  setValue,
-} = useForm({ mode: "onBlur" });
-
-
-  
-  const onSubmit = async (data)=>{
+  // ── Submit ──
+  const onSubmit = useCallback(async (data) => {
+    setSubmitting(true);
     try {
-      const response = await axios.post("https://realstate.niledevelopers.com/Agent/Rent/Create", data, 
-        {
-     headers: { 
-  Authorization: `Bearer ${sessionStorage.token}`,
-  'apiKey': apiKey,
-  "Content-Type": 'application/json',
-     
-     
-    } }
-      );
-    
-    
-      console.log(response);
-
-      toast.success(
-        response?.data?.message || 'congratulations, rental contract created !'
-      );
-    console.log(response)
-      } 
-     catch (error) {
-     toast.error(
-      error.response.data.message || "Creating rental contract unsuccessful. Please try again"
-    );
-     console.log(error);
+      await axios.post(AGENT_URLs.RentCreate, data, { headers: headers() });
+      toast.success(t('rent_contract_created'));
+    } catch (err) {
+      toast.error(err.response?.data?.message || t('rent_contract_failed'));
+    } finally {
+      setSubmitting(false);
     }
-  }
+  }, [t]);
 
   return (
-    <div>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="text-primary">📋 Add Rental Contract</h2> 
-      </div>
+    <div className="add-prop-page">
 
-     <form className='container-form' onSubmit={handleSubmit(onSubmit)}>
+      <h2 className="add-prop-title">
+        <i className="fa-solid fa-file-contract me-2" style={{ color: '#0088BD' }} />
+        {t('add_rental_contract')}
+      </h2>
 
-         <div className=" my-4">
-        <label className="main-color my-1"> property</label>
-           <select
-  className="searchSelect mt-0"
-  {...register("propertyId", {
-    required: true,
-    onChange: (e) =>
-      handlePropertyRent(e.target.value, rentRequests),
-  })}
->
-    <option value="" disabled></option>
-        {properties?.map((property) => 
-          <option key={property.id} value={property.id}>
-            {property.title}
-          </option>
-        )}
-      </select>      
+      <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
+        <Row className="g-3">
+
+          {/* Property */}
+          <Col md={12}>
+            <label className="add-prop-label">{t('property')}</label>
+            <select className="add-prop-input"
+              {...register('propertyId', {
+                required: t('required'),
+                onChange: e => handlePropertyRent(e.target.value),
+              })}>
+              <option value="">{t('select_property')}</option>
+              {properties.map(p => (
+                <option key={p.id} value={p.id}>{p.title}</option>
+              ))}
+            </select>
+            {errors.propertyId && <p className="add-prop-error-text">{errors.propertyId.message}</p>}
+          </Col>
+
+          {/* Start Date */}
+          <Col md={6}>
+            <label className="add-prop-label">{t('start_date')}</label>
+            <input type="date" className="add-prop-input"
+              {...register('startDate', { required: t('required') })} />
+            {errors.startDate && <p className="add-prop-error-text">{errors.startDate.message}</p>}
+          </Col>
+
+          {/* End Date */}
+          <Col md={6}>
+            <label className="add-prop-label">{t('end_date')}</label>
+            <input type="date" className="add-prop-input"
+              {...register('endDate', { required: t('required') })} />
+            {errors.endDate && <p className="add-prop-error-text">{errors.endDate.message}</p>}
+          </Col>
+
+          {/* Rent Type */}
+          <Col md={6}>
+            <label className="add-prop-label">{t('rent_type')}</label>
+            <select className="add-prop-input"
+              disabled={!!existingRent}
+              {...register('rentTypeId', { required: t('required') })}>
+              <option value="">{t('select_rent_type')}</option>
+              {rentTypes.map(r => (
+                <option key={r.id} value={r.id}>{r.name}</option>
+              ))}
+            </select>
+            {errors.rentTypeId && <p className="add-prop-error-text">{errors.rentTypeId.message}</p>}
+          </Col>
+
+          {/* Monthly Payment */}
+          <Col md={6}>
+            <label className="add-prop-label">{t('monthly_payment')}</label>
+            <input type="number" className="add-prop-input"
+              placeholder="0"
+              {...register('monthlyPayment', { required: t('required') })} />
+            {errors.monthlyPayment && <p className="add-prop-error-text">{errors.monthlyPayment.message}</p>}
+          </Col>
+
+          {/* Total Amount */}
+          <Col md={6}>
+            <label className="add-prop-label">{t('total_amount')}</label>
+            <input type="number" className="add-prop-input"
+              placeholder="0"
+              {...register('totalAmount', { required: t('required') })} />
+            {errors.totalAmount && <p className="add-prop-error-text">{errors.totalAmount.message}</p>}
+          </Col>
+
+          {/* Monthly Amount */}
+          <Col md={6}>
+            <label className="add-prop-label">{t('monthly_amount')}</label>
+            <input type="number" className="add-prop-input"
+              placeholder="0"
+              {...register('monthlyAmount', { required: t('required') })} />
+            {errors.monthlyAmount && <p className="add-prop-error-text">{errors.monthlyAmount.message}</p>}
+          </Col>
+
+          {/* Rent Request ID */}
+          <Col md={6}>
+            <label className="add-prop-label">{t('rent_request_id')}</label>
+            <input type="text" className="add-prop-input"
+              disabled={!!existingRent}
+              {...register('rentRequestId', { required: t('required') })} />
+            {errors.rentRequestId && <p className="add-prop-error-text">{errors.rentRequestId.message}</p>}
+          </Col>
+
+          {/* Full Name */}
+          <Col md={6}>
+            <label className="add-prop-label">{t('full_name')}</label>
+            <input type="text" className="add-prop-input"
+              disabled={!!existingRent}
+              {...register('fullName', { required: t('required') })} />
+            {errors.fullName && <p className="add-prop-error-text">{errors.fullName.message}</p>}
+          </Col>
+
+          {/* Nationality */}
+          <Col md={6}>
+            <label className="add-prop-label">{t('nationality')}</label>
+            <select className="add-prop-input"
+              {...register('nationalityId', { required: t('required') })}>
+              <option value="">{t('select_nationality')}</option>
+              {nationalities.map(n => (
+                <option key={n.id} value={n.id}>{n.name}</option>
+              ))}
+            </select>
+            {errors.nationalityId && <p className="add-prop-error-text">{errors.nationalityId.message}</p>}
+          </Col>
+
+          {/* National Type */}
+          <Col md={6}>
+            <label className="add-prop-label">{t('national_type')}</label>
+            <select className="add-prop-input"
+              {...register('nationalTypeId', { required: t('required') })}>
+              <option value="">{t('select_national_type')}</option>
+              {nationalTypes.map(nt => (
+                <option key={nt.id} value={nt.id}>{nt.name}</option>
+              ))}
+            </select>
+            {errors.nationalTypeId && <p className="add-prop-error-text">{errors.nationalTypeId.message}</p>}
+          </Col>
+
+          {/* National ID */}
+          <Col md={6}>
+            <label className="add-prop-label">{t('national_id')}</label>
+            <input type="text" className="add-prop-input"
+              placeholder={t('national_id_placeholder')}
+              {...register('nationalId', { required: t('required') })} />
+            {errors.nationalId && <p className="add-prop-error-text">{errors.nationalId.message}</p>}
+          </Col>
+
+          {/* Mobile */}
+          <Col md={6}>
+            <label className="add-prop-label">{t('mobile')}</label>
+            <input type="text" className="add-prop-input"
+              disabled={!!existingRent}
+              {...register('mobile', { required: t('required') })} />
+            {errors.mobile && <p className="add-prop-error-text">{errors.mobile.message}</p>}
+          </Col>
+
+          {/* Status */}
+          <Col md={6}>
+            <label className="add-prop-label">{t('status')}</label>
+            <input type="text" className="add-prop-input"
+              placeholder={t('status_placeholder')}
+              {...register('status', { required: t('required') })} />
+            {errors.status && <p className="add-prop-error-text">{errors.status.message}</p>}
+          </Col>
+
+        </Row>
+
+        {/* Footer */}
+        <div className="add-prop-footer">
+          <button type="submit" className="add-prop-submit-btn" disabled={submitting}>
+            {submitting
+              ? <><span className="spinner-border spinner-border-sm me-2" />{t('adding')}</>
+              : <><i className="fa-solid fa-file-contract me-2" />{t('add_rental_contract')}</>
+            }
+          </button>
         </div>
-       {errors?.propertyId && (
-  <span className="text-danger">
-    {String(errors.propertyId.message)}
-  </span>
-)}
 
-
-
-
-        <div className=" my-4">
-        <label className="main-color my-1">start Date</label>
-          <div className="input-group ">
-          <input type="date" className="form-control form-input"
-           placeholder="Enter your start date"
-           aria-label="start date" aria-describedby="basic-addon1"
-           {...register("startDate",FieldValidation.required)}
-           />
-          </div>
-         
-        </div>
-        {errors?.startDate && (
-                <span className="text-danger">
-                  {String(errors?.startDate.message)}
-                </span>
-        )}
-        
-
-
-         <div className=" my-4">
-        <label className="main-color my-1">End Date</label>
-          <div className="input-group ">
-          <input type="date" className="form-control form-input"
-           placeholder="Enter your end date"
-           aria-label="end date" aria-describedby="basic-addon1"
-           {...register("endDate",FieldValidation.required)}
-           />
-          </div>
-         
-        </div>
-        {errors?.endDate && (
-                <span className="text-danger">
-                  {String(errors?.endDate.message)}
-                </span>
-        )}
-
-
-<div className="my-4">
-  <label className="main-color my-1">Rent Type</label>
-
-  <select
-    className="searchSelect mt-0"
-    disabled={!!existingRent}
-    {...register("rentTypeId", FieldValidation.required)}
-  >
-    <option value="">Select rent type</option>
-
-    {rentTypes.map((rentType) => (
-      <option key={rentType.id} value={rentType.id}>
-        {rentType.name}
-      </option>
-    ))}
-  </select>
-</div>
-
-        {errors?.rentTypeId && (
-                <span className="text-danger">
-                  {String(errors?.rentTypeId.message)}
-                </span>
-        )}
-
-
-
-              <div className=" my-4">
-        <label className="main-color my-1">monthly Payment</label>
-          <div className="input-group ">
-          <input type="text" className="form-control form-input"
-           placeholder="Enter your monthly payment"
-           aria-label="monthly payment" aria-describedby="basic-addon1"
-           {...register("monthlyPayment",FieldValidation.required)}
-           />
-          </div>
-         
-        </div>
-        {errors?.monthlyPayment && (
-                <span className="text-danger">
-                  {String(errors?.monthlyPayment.message)}
-                </span>
-        )}
-
-             <div className=" my-4">
-        <label className="main-color my-1">totalAmount</label>
-          <div className="input-group ">
-          <input type="text" className="form-control form-input"
-           placeholder="Enter your total amount"
-           aria-label="total amount" aria-describedby="basic-addon1"
-           {...register("totalAmount",FieldValidation.required)}
-           />
-          </div>
-         
-        </div>
-        {errors?.totalAmount && (
-                <span className="text-danger">
-                  {String(errors?.totalAmount.message)}
-                </span>
-        )}
-
-
-        <div className=" my-4">
-        <label className="main-color my-1">monthlyAmount</label>
-          <div className="input-group ">
-          <input type="text" className="form-control form-input"
-           placeholder="Enter your monthly amount"
-           aria-label="monthly amount" aria-describedby="basic-addon1"
-           {...register("monthlyAmount",FieldValidation.required)}
-           />
-          </div>
-         
-        </div>
-        {errors?.monthlyAmount && (
-                <span className="text-danger">
-                  {String(errors?.monthlyAmount.message)}
-                </span>
-        )}
-
-
-            <div className=" my-4">
-        <label className="main-color my-1">rentRequest</label>
-          <div className="input-group ">
-          {/* rentRequestId */}
-<input
-  type="text"
-  className="form-control form-input"
-  disabled={!!existingRent}   // 🔹 لو فيه existingRent يبقى مقفول، لو مش موجود يبقى مفتوح
-  {...register("rentRequestId", FieldValidation.required)}
-/>
-{existingRent && <input type="hidden" {...register("rentRequestId")} />}
-
-          </div>
-         
-        </div>
-        {errors?.rentRequestId && (
-                <span className="text-danger">
-                  {String(errors?.rentRequestId.message)}
-                </span>
-        )}
-
-
-
-         <div className=" my-4">
-        <label className="main-color my-1">fullName</label>
-          <div className="input-group ">
-        {/* fullName */}
-<input
-  type="text"
-  className="form-control form-input"
-  disabled={!!existingRent}
-  {...register("fullName", FieldValidation.required)}
-/>
-{existingRent && <input type="hidden" {...register("fullName")} />}
-
-          </div>
-         
-        </div>
-        {errors?.fullName && (
-                <span className="text-danger">
-                  {String(errors?.fullName.message)}
-                </span>
-        )}
-
-
-         <div className=" my-4">
-        <label className="main-color my-1">nationality</label>
-
-
-         <select className='searchSelect mt-0' >
-    <option value="" disabled></option>
-        {country.map((country) => 
-          <option key={country.id} value={country.id}>
-            {country.name}
-          </option>
-        )}
-      </select>
-           
-          {/* <div className="input-group ">
-          <input type="text" className="form-control form-input"
-           placeholder="Enter your nationality id"
-           aria-label="nationality id" aria-describedby="basic-addon1"
-           {...register("nationalityId",FieldValidation.required)}
-           />
-          </div> */}
-         
-        </div>
-        {errors?.nationalityId && (
-                <span className="text-danger">
-                  {String(errors?.nationalityId.message)}
-                </span>
-        )}
-
-
-
-
-
-  <div className=" my-4">
-        <label className="main-color my-1"> national Type</label>
-          <div className="input-group ">
-            <select {...register("nationalTypeId", FieldValidation.required)}>
-           <option value="" ></option>
-        {nationalTypes.map((nationaltype) => 
-          <option key={nationaltype.id} value={nationaltype.id}>
-            {nationaltype.name}
-          </option>
-        )}
-      </select>
-          </div>
-         
-        </div>
-        {errors?.nationalTypeId && (
-                <span className="text-danger">
-                  {String(errors?.nationalTypeId.message)}
-                </span>
-        )}   
-
-
-
-
-
-         <div className=" my-4">
-        <label className="main-color my-1">nationalId</label>
-          <div className="input-group ">
-          <input type="text" className="form-control form-input"
-           placeholder="Enter your national id"
-           aria-label="national id" aria-describedby="basic-addon1"
-           {...register("nationalId",FieldValidation.required)}
-           />
-          </div>
-         
-        </div>
-        {errors?.nationalId && (
-                <span className="text-danger">
-                  {String(errors?.nationalId.message)}
-                </span>
-        )}
-
-
-
-
-          <div className=" my-4">
-        <label className="main-color my-1">mobile</label>
-          <div className="input-group ">
-       {/* mobile */}
-<input
-  type="text"
-  className="form-control form-input"
-  disabled={!!existingRent}
-  {...register("mobile", FieldValidation.required)}
-/>
-{existingRent && <input type="hidden" {...register("mobile")} />}
-
-          </div>
-         
-        </div>
-        {errors?.mobile && (
-                <span className="text-danger">
-                  {String(errors?.mobile.message)}
-                </span>
-        )}
-
-
-            <div className=" my-4">
-        <label className="main-color my-1">status</label>
-          <div className="input-group ">
-          <input type="text" className="form-control form-input"
-           placeholder="Enter your status"
-           aria-label="status" aria-describedby="basic-addon1"
-           {...register("status",FieldValidation.required)}
-           />
-          </div>
-         
-        </div>
-        {errors?.status && (
-                <span className="text-danger">
-                  {String(errors?.status.message)}
-                </span>
-        )}
-
-
-       <div className="main-bg-color rounded-pill py-1 py-md-2">          
-        <button
-                type="submit"
-                className="btn btn-primary"
-              >
-                Add
-              </button>
-            </div>
       </form>
     </div>
-  )
+  );
 }

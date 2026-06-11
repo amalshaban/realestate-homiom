@@ -1,4 +1,5 @@
 import React, { useContext, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
@@ -28,6 +29,7 @@ const GitHubIcon = () => (
 export default function LogIn() {
 
   const { saveLoginData } = useContext(AuthContext);
+  const { t } = useTranslation();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isSubmitting,      setIsSubmitting]      = useState(false);
   const navigate = useNavigate();
@@ -36,7 +38,7 @@ export default function LogIn() {
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
-    const toastId = toast.loading('Logging in...');
+    const toastId = toast.loading(t('logging_in'));
     try {
       const response = await axios.post(USERS_URLs.Login, data, {
         headers: {
@@ -48,7 +50,7 @@ export default function LogIn() {
       sessionStorage.setItem('token', response.data.token);
       saveLoginData();
       toast.update(toastId, {
-        render: 'Welcome Back! 👋',
+        render: t('welcome_back'),
         type: 'success',
         isLoading: false,
         autoClose: 2000,
@@ -56,7 +58,7 @@ export default function LogIn() {
       setTimeout(() => navigate('/home', { replace: true }), 500);
     } catch (error) {
       toast.update(toastId, {
-        render: error.response?.data?.message || 'Login failed. Please try again.',
+        render: error.response?.data?.message || t('login_failed'),
         type: 'error',
         isLoading: false,
         autoClose: 3000,
@@ -69,7 +71,7 @@ export default function LogIn() {
   return (
     <div className="login-page">
 
-      {/* ── Logo & Welcome — خارج الكارد ── */}
+      {/* ── Logo ── */}
       <div className="text-center mb-4">
         <div className="mb-2">
           <i className="fa-solid fa-house" style={{ fontSize: '28px', color: '#0088BD' }} />
@@ -77,18 +79,20 @@ export default function LogIn() {
             Homiom
           </span>
         </div>
-        <h2 className="login-title">Welcome Back</h2>
-        <p className="login-subtitle">Login to access your account</p>
+        <h2 className="login-title">{t('welcome_back')}</h2>
+        <p className="login-subtitle">{t('login_subtitle')}</p>
       </div>
 
-      {/* ── الكارد ── */}
+      {/* ── Card ── */}
       <div className="login-card">
         <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
-<h5>Login</h5>
-<p>Enter your credentials to continue</p>
+
+          <h5>{t('login')}</h5>
+          <p>{t('login_credentials')}</p>
+
           {/* ── Email ── */}
           <div className="mb-3">
-            <label className="login-label">Email Address</label>
+            <label className="login-label">{t('email_address')}</label>
             <input
               type="email"
               className="form-control login-input"
@@ -101,8 +105,8 @@ export default function LogIn() {
           {/* ── Password ── */}
           <div className="mb-2">
             <div className="d-flex justify-content-between align-items-center mb-1">
-              <label className="login-label mb-0">Password</label>
-              <Link to="/auth/forgot-password" className="login-forgot">Forgot password?</Link>
+              <label className="login-label mb-0">{t('password')}</label>
+              <Link to="/auth/forgot-password" className="login-forgot">{t('forgot_password')}</Link>
             </div>
             <div className="password-wrapper">
               <input
@@ -126,42 +130,38 @@ export default function LogIn() {
           {/* ── Remember Me ── */}
           <div className="form-check login-remember mb-3">
             <input type="checkbox" className="form-check-input" id="rememberMe" />
-            <label className="form-check-label" htmlFor="rememberMe">Remember me</label>
+            <label className="form-check-label" htmlFor="rememberMe">{t('remember_me')}</label>
           </div>
 
           {/* ── Submit ── */}
           <button type="submit" className="login-btn" disabled={isSubmitting}>
-            {isSubmitting ? 'Logging in...' : 'Login'}
+            {isSubmitting ? t('logging_in') : t('login')}
           </button>
 
         </form>
 
         {/* ── Divider ── */}
         <div className="login-divider">
-          <hr /><span>OR CONTINUE WITH</span><hr />
+          <hr /><span>{t('or_continue_with')}</span><hr />
         </div>
 
-        {/* ── Social Buttons ── */}
+        {/* ── Social ── */}
         <div className="d-flex gap-3">
-          <button className="social-btn">
-            <GoogleIcon /> Google
-          </button>
-          <button className="social-btn">
-            <GitHubIcon /> GitHub
-          </button>
+          <button className="social-btn"><GoogleIcon /> Google</button>
+          <button className="social-btn"><GitHubIcon /> GitHub</button>
         </div>
 
         {/* ── Sign Up Link ── */}
         <div className="login-bottom">
-          Don't have an account? <Link to="/auth/join/signup">Sign up</Link>
+          {t('no_account')} <Link to="/auth/join/signup">{t('sign_up')}</Link>
         </div>
 
       </div>
 
       {/* ── reCAPTCHA ── */}
       <p className="login-recaptcha">
-        Protected by reCAPTCHA and subject to the Homiom{' '}
-        <Link to="/privacy">Privacy Policy</Link>
+        {t('recaptcha_text')}{' '}
+        <Link to="/privacy">{t('privacy_policy')}</Link>
       </p>
 
     </div>

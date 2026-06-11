@@ -100,18 +100,19 @@ const routes = createHashRouter([
   },
 
   // 4. Auth
-  {
-    path: '/auth',
-    element: <Outlet />,
-    errorElement: <NotFound />,
-    children: [
-      { index: true,              element: <LogIn />       },
-      { path: 'login',            element: <LogIn />       },
-      { path: 'join',             element: <Join />        },
-      { path: 'join/signupnormal', element: <SignUpNormal /> },
-      { path: 'join/signupagent',  element: <AgentSignUp /> },
-    ],
-  },
+  // ── Auth ──
+{
+  path: '/auth',
+  element: <Outlet />,
+  errorElement: <NotFound />,
+  children: [
+    { index: true,               element: <LogIn />        },
+    { path: 'login',             element: <LogIn />        },
+    { path: 'join',              element: <Join />         },
+    { path: 'join/signupnormal', element: <SignUpNormal /> },
+    { path: 'join/signupagent',  element: <AgentSignUp />  },
+  ],
+},
 
   // 5. Properties
   {

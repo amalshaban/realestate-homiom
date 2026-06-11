@@ -1,46 +1,48 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
-import '../../RealEstateAgents/AgentPannel.css';
-import { useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useContext, useCallback } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../../../AuthModule/context/AuthContext.jsx';
+import '../../RealEstateAgents/AgentPannel.css';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const SIDEBAR_LINKS = [
-  { label: 'Overview',          to: '/agentpannel/overview',          icon: 'fa-solid fa-chart-pie'       },
-  { label: 'My Properties',     to: '/agentpannel/properties',        icon: 'fa-solid fa-building'        },
-  { label: 'Visit Requests',    to: '/agentpannel/visitrequests',     icon: 'fa-solid fa-calendar-check'  },
-  { label: 'Purchase Requests', to: '/agentpannel/purchaserequests',  icon: 'fa-solid fa-hand-holding-dollar' },
-  { label: 'Rent Requests',     to: '/agentpannel/rentrequests',      icon: 'fa-solid fa-file-contract'   },
-  { label: 'Rents',             to: '/agentpannel/rents',             icon: 'fa-solid fa-key'             },
+  { key: 'overview',          to: '/agentpannel/overview',         icon: 'fa-solid fa-chart-pie'            },
+  { key: 'my_properties',     to: '/agentpannel/properties',       icon: 'fa-solid fa-building'             },
+  { key: 'visit_requests',    to: '/agentpannel/visitrequests',    icon: 'fa-solid fa-calendar-check'       },
+  { key: 'purchase_requests', to: '/agentpannel/purchaserequests', icon: 'fa-solid fa-hand-holding-dollar'  },
+  { key: 'rent_requests',     to: '/agentpannel/rentrequests',     icon: 'fa-solid fa-file-contract'        },
+  { key: 'rents',             to: '/agentpannel/rents',            icon: 'fa-solid fa-key'                  },
 ];
 
-
 // ─── Main Component ───────────────────────────────────────────────────────────
-export default function AgentSidebar({onClose}) {
-  const { logOut } = useContext(AuthContext);
-const navigate   = useNavigate();
+export default function AgentSidebar({ onClose }) {
 
-const handleLogout = () => {
-  logOut();
-  navigate('/home');
-};
+  const { logOut } = useContext(AuthContext);
+  const { t }      = useTranslation();
+  const navigate   = useNavigate();
+
+  const handleLogout = useCallback(() => {
+    logOut();
+    navigate('/home');
+  }, [logOut, navigate]);
 
   return (
     <div className="agent-sidebar">
-<div className="d-md-none d-flex justify-content-end mb-2">
-  <button
-    style={{ background: 'none', border: 'none', fontSize: '20px', color: '#888' }}
-    onClick={onClose}
-  >
-    <i className="fa-solid fa-xmark" />
-  </button>
-</div>
+
+      {/* ── Mobile Close ── */}
+      <div className="d-md-none d-flex justify-content-end mb-2">
+        <button
+          style={{ background: 'none', border: 'none', fontSize: '20px', color: '#888' }}
+          onClick={onClose}
+        >
+          <i className="fa-solid fa-xmark" />
+        </button>
+      </div>
 
       {/* ── Header ── */}
       <div>
-        <h5 className="ap-sidebar-title">Agent Dashboard</h5>
-<p className="ap-sidebar-subtitle">Real Estate Management</p>
+        <h5 className="ap-sidebar-title">{t('agent_dashboard')}</h5>
+        <p className="ap-sidebar-subtitle">{t('real_estate_management')}</p>
       </div>
 
       {/* ── Links ── */}
@@ -52,29 +54,28 @@ const handleLogout = () => {
               className={({ isActive }) => `ap-sidebar-link ${isActive ? 'active' : ''}`}
             >
               <i className={link.icon} />
-              {link.label}
+              {t(link.key)}
             </NavLink>
           </li>
         ))}
       </ul>
 
+      {/* ── Bottom ── */}
+      <div className="ap-sidebar-bottom">
+        <NavLink
+          to="/agentpannel/help"
+          className={({ isActive }) => `ap-sidebar-link ${isActive ? 'active' : ''}`}
+        >
+          <i className="fa-regular fa-circle-question" />
+          {t('help_center')}
+        </NavLink>
 
+        <button className="ap-sidebar-link ap-signout-btn" onClick={handleLogout}>
+          <i className="fa-solid fa-arrow-right-from-bracket" />
+          {t('sign_out')}
+        </button>
+      </div>
 
-<div className="ap-sidebar-bottom">
-  <NavLink
-    to="/agentpannel/help"
-    className={({ isActive }) => `ap-sidebar-link ${isActive ? 'active' : ''}`}
-  >
-    <i className="fa-regular fa-circle-question" />
-    Help Center
-  </NavLink>
-
-  {/* ── Sign Out ── */}
-  <button className="ap-sidebar-link ap-signout-btn" onClick={handleLogout}>
-    <i className="fa-solid fa-arrow-right-from-bracket" />
-    Sign Out
-  </button>
-</div>
     </div>
   );
 }

@@ -6,6 +6,9 @@ import 'react-toastify/dist/ReactToastify.css';
 import { createHashRouter, RouterProvider, Outlet, Navigate } from "react-router-dom";
 import AuthContextProvider from "./modules/AuthModule/context/AuthContext.jsx";
 
+
+
+
 // ─── Eager Imports (محتاجين يتحملوا فوراً) ───────────────────────────────────
 import MasterLayout      from "./modules/SharedModule/MasterLayout/MasterLayout";
 import PropertyLayout    from "./modules/SharedModule/PropertyLayout/PropertyLayout.jsx";
@@ -13,6 +16,7 @@ import HomeSeekerLayout  from "./modules/SharedModule/HomeSeekerLayout/HomeSeeke
 import ProtectedRoute    from "./modules/SharedModule/ProtectedRoute/ProtectedRoute.jsx";
 import NotFound          from "./modules/SharedModule/NotFound/NotFound.jsx";
 import AgentProfile from "./modules/UsersModule/RealEstateAgents/AgentProfile/AgentProfile.jsx";
+
 
 // ─── Lazy Imports ─────────────────────────────────────────────────────────────
 const Home               = lazy(() => import("./modules/SharedModule/Home/Home.jsx"));
@@ -35,6 +39,10 @@ const VisitRequestUser   = lazy(() => import("./modules/UsersModule/HomeSeekers/
 const PurchaseRequestsUser = lazy(() => import("./modules/UsersModule/HomeSeekers/PurchaseRequestsUser/PurchaseRequestsUser.jsx"));
 const RentalRequestsUser = lazy(() => import("./modules/UsersModule/HomeSeekers/RentalRequestsUser/RentalRequestsUser.jsx"));
 const SideBarUser        = lazy(() => import("./modules/UsersModule/HomeSeekers/SideBarUser/SideBarUser.jsx"));
+
+const SearchResults = lazy(() => import("./modules/SharedModule/SearchResults/SearchResults.jsx"));
+
+
 
 // ─── Page Loader ──────────────────────────────────────────────────────────────
 const PageLoader = () => (
@@ -60,6 +68,7 @@ const routes = createHashRouter([
     children: [
       { index: true,   element: <Home /> },
       { path: 'home',  element: <Home /> },
+      { path: 'search', element: <SearchResults /> },
     ],
   },
 
@@ -115,17 +124,20 @@ const routes = createHashRouter([
 },
 
   // 5. Properties
-  {
-    path: '/properties',
-    element: <PropertyLayout />,
-    errorElement: <NotFound />,
-    children: [
-      { index: true,              element: <ViewProperties />  },
-      { path: 'viewproperties',   element: <ViewProperties />  },
-      { path: 'property/:id',     element: <PropertyDetails /> },
-      { path: 'addproperty',      element: <AddProperty />     },
-    ],
-  },
+  // ── import ──
+
+// ── route ──
+{
+  path: '/properties',
+  element: <PropertyLayout />,
+  children: [
+    { index: true,            element: <ViewProperties />  },
+    { path: 'viewproperties', element: <ViewProperties />  },
+    { path: 'property/:id',   element: <PropertyDetails /> },
+    { path: 'search',         element: <SearchResults />   }, // ← موجود؟
+    { path: 'addproperty',    element: <AddProperty />     },
+  ],
+},
 
   // 404
   { path: '*', element: <NotFound /> },

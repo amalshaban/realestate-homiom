@@ -1,6 +1,6 @@
-export const BASE_URL = "https://realstate.niledevelopers.com";
+export const BASE_URL = "https://homiom.niledevelopers.com/api/";
 
-const baseURL = BASE_URL; // ← عشان الكود القديم يفضل شغال
+const baseURL = BASE_URL; 
 
 export const USERS_URLs = {
   Login:         `${BASE_URL}/Account/Login`,

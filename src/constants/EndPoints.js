@@ -20,6 +20,7 @@ export const PROPERTIES_URLS = {
   propertySearch:   `${BASE_URL}/properties/search`,
   activeProperties: `${BASE_URL}/properties/active`,
   propertyDetails:  `${BASE_URL}/properties`,
+  UpdateProperty: `${BASE_URL}Agent/Property/Update`,
 };
 
 export const LOCATIONS_URLs = {

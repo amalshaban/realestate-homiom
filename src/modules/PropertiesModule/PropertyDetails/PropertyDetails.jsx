@@ -171,6 +171,7 @@ export default function PropertyDetails() {
 
               {/* Stats */}
               <div className="pd-stats">
+                
                 <div className="pd-stat-card">
                   <i className="fa-solid fa-bed" />
                   <p className="pd-stat-label">{t('bedrooms')}</p>

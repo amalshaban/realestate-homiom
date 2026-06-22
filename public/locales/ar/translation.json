@@ -271,6 +271,26 @@
 "my_properties": "عقاراتي",
 "rents": "عقود الإيجار",
 "help_center": "مركز المساعدة",
-"sign_out": "تسجيل الخروج"
+"sign_out": "تسجيل الخروج",
+"no_locations_available": "لا توجد بيانات موقع متاحة لهذه العقارات.",
+"view_details": "عرض التفاصيل",
+"properties_listed": "عقار مدرج",
+"add_property": "إضافة عقار",
+"try_again": "حاول مرة أخرى",
+"view": "عرض",
+"edit": "تعديل",
+"delete": "حذف",
+"delete_property_title": "حذف العقار",
+"delete_property_confirm": "هل أنت متأكد من حذف",
+"action_cannot_undone": "لا يمكن التراجع عن هذا الإجراء.",
+"cancel": "إلغاء",
+"deleting": "جاري الحذف...",
+"property_deleted": "تم حذف العقار بنجاح!",
+"failed_delete_property": "فشل حذف العقار.",
+"property_settings": "إعدادات العقار",
+"visible": "مرئي",
+"hidden": "مخفي",
+"updating_property": "جاري تحديث العقار...",
+"updated_property": "تم تحديث العقار بنجاح!"
 
 }

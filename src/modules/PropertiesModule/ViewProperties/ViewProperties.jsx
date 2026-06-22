@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Row, Col } from 'react-bootstrap';
 import useProperties from './useProperties.js';
 import { BASE_URL } from '../../../constants/EndPoints.js';
+import PropertiesMap from '../../SharedModule/PropertiesMap/PropertiesMap.jsx';
 import '../PropertyDetails.css';
 
 // ─── Sub Components ───────────────────────────────────────────────────────────
@@ -194,10 +195,7 @@ export default function ViewProperties() {
 
       {/* ── Map View ── */}
       {!loading && !error && viewMode === 'map' && (
-        <div className="d-flex align-items-center justify-content-center"
-          style={{ height: '400px', background: '#f5f5f5', borderRadius: '16px' }}>
-          <p className="text-muted">{t('map_coming_soon')}</p>
-        </div>
+        <PropertiesMap properties={properties} onView={handleViewProperty} />
       )}
 
     </div>

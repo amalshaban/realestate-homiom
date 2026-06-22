@@ -1,9 +1,9 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { BASE_URL } from '../../../constants/EndPoints.js';
 import useSearch from '../../SharedModule/Search/useSearch.js';
-
+import PropertiesMap from '../PropertiesMap/PropertiesMap.jsx';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const BASE_IMG = BASE_URL;
@@ -68,6 +68,7 @@ export default function SearchResults() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { results, loading, error, total, search } = useSearch();
+  const [viewMode, setViewMode] = useState('grid');
 
   // ── جيب الـ params من الـ URL وابحث تلقائي ──
   useEffect(() => {
@@ -100,6 +101,22 @@ export default function SearchResults() {
             </p>
           )}
         </div>
+        <div className="d-flex gap-2 ms-auto">
+          <button
+            className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
+            onClick={() => setViewMode('grid')}
+            title={t('grid_view')}
+          >
+            <i className="fa-solid fa-grip" />
+          </button>
+          <button
+            className={`view-toggle-btn ${viewMode === 'map' ? 'active' : ''}`}
+            onClick={() => setViewMode('map')}
+            title={t('map_view')}
+          >
+            <i className="fa-solid fa-map" />
+          </button>
+        </div>
       </div>
 
       {/* ── Loading ── */}
@@ -117,8 +134,8 @@ export default function SearchResults() {
         </div>
       )}
 
-      {/* ── Results ── */}
-      {!loading && !error && results.length > 0 && (
+      {/* ── Grid View ── */}
+      {!loading && !error && viewMode === 'grid' && results.length > 0 && (
         <div className="sr-grid">
           {results.map(property => (
             <PropertyCard
@@ -128,6 +145,11 @@ export default function SearchResults() {
             />
           ))}
         </div>
+      )}
+
+      {/* ── Map View ── */}
+      {!loading && !error && viewMode === 'map' && results.length > 0 && (
+        <PropertiesMap properties={results} onView={handleViewProperty} />
       )}
 
       {/* ── Empty ── */}

@@ -3124,3 +3124,88 @@ input, textarea{
   0%   { background-position: 200% 0;  }
   100% { background-position: -200% 0; }
 }
+
+
+
+/*DELETEPROPERTY*/
+.dp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dp-modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.2);
+}
+
+.dp-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #fef2f2;
+  color: #e53e3e;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.dp-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0b0d2a;
+  margin-bottom: 8px;
+}
+
+.dp-text {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.dp-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.dp-btn-cancel {
+  flex: 1;
+  padding: 11px;
+  background: #f5f7fa;
+  color: #0b0d2a;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dp-btn-delete {
+  flex: 1;
+  padding: 11px;
+  background: #e53e3e;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dp-btn-cancel:disabled,
+.dp-btn-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -268,6 +268,26 @@
 "my_properties": "My Properties",
 "rents": "Rents",
 "help_center": "Help Center",
-"sign_out": "Sign Out"
+"sign_out": "Sign Out",
+"no_locations_available": "No location data available for these properties.",
+"view_details": "View Details",
+"properties_listed": "properties listed",
+"add_property": "Add Property",
+"try_again": "Try again",
+"view": "View",
+"edit": "Edit",
+"delete": "Delete",
+"delete_property_title": "Delete Property",
+"delete_property_confirm": "Are you sure you want to delete",
+"action_cannot_undone": "This action cannot be undone.",
+"cancel": "Cancel",
+"deleting": "Deleting...",
+"property_deleted": "Property deleted successfully!",
+"failed_delete_property": "Failed to delete property.",
+"property_settings": "Property Settings",
+"visible": "Visible",
+"hidden": "Hidden",
+"updating_property": "Updating property...",
+"updated_property": "Property updated successfully!"
 
 }

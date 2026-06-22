@@ -41,6 +41,7 @@ const RentalRequestsUser = lazy(() => import("./modules/UsersModule/HomeSeekers/
 const SideBarUser        = lazy(() => import("./modules/UsersModule/HomeSeekers/SideBarUser/SideBarUser.jsx"));
 
 const SearchResults = lazy(() => import("./modules/SharedModule/SearchResults/SearchResults.jsx"));
+const EditProperty = lazy(() => import("./modules/PropertiesModule/EditProperty/EditProperty.jsx"));
 
 
 
@@ -86,7 +87,7 @@ const routes = createHashRouter([
       { path: 'rents',              element: <Rents />             },
       { path: 'addproperty',        element: <AddProperty />       },
       { path: 'profile', element: <AgentProfile /> },
-
+      { path: 'editproperty/:id', element: <EditProperty /> },
     ],
   },
 

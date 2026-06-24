@@ -5,8 +5,6 @@ import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { toast } from 'react-toastify';
-import NavBar from '../../SharedModule/NavBar/NavBar.jsx';
-import Footer from '../../SharedModule/Footer/Footer.jsx';
 import usePropertyDetails from '../usePropertyDetails.js';
 import profileimg from '../../../assets/imgs/profile.png';
 import { BASE_URL } from '../../../constants/EndPoints.js';
@@ -60,6 +58,22 @@ export default function PropertyDetails() {
   const [offeredPrice, setOfferedPrice] = useState('');
   const [notes,        setNotes]        = useState('');
 
+  const handleShare = useCallback(async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: document.title,
+          url: window.location.href,
+        });
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success(t('link_copied') || 'Link copied');
+      }
+    } catch (error) {
+      console.log('Share cancelled', error);
+    }
+  }, [t]);
+
   const handleVisitRequest = useCallback(async () => {
     const result = await sendVisitRequest();
     if (result.success) toast.success(t('visit_request_sent'));
@@ -96,6 +110,8 @@ export default function PropertyDetails() {
 
   return (
     <div className="pd-page">
+
+
 
       {loading && <SkeletonLoader />}
 
@@ -293,6 +309,9 @@ export default function PropertyDetails() {
 
             {/* ── Right Side ── */}
             <div className="pd-right">
+              <button  className="pd-btn-secondary" onClick={handleShare}>
+share this property
+    </button>
               <div className="pd-contact-card">
 
                 {/* Agent */}

@@ -288,6 +288,7 @@
 "visible": "Visible",
 "hidden": "Hidden",
 "updating_property": "Updating property...",
-"updated_property": "Property updated successfully!"
+"updated_property": "Property updated successfully!",
+"loading_map": "Loading map..."
 
 }

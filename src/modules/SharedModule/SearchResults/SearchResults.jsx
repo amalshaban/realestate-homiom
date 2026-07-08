@@ -8,6 +8,30 @@ import PropertiesMap from '../PropertiesMap/PropertiesMap.jsx';
 // ─── Constants ────────────────────────────────────────────────────────────────
 const BASE_IMG = BASE_URL;
 
+// ─── Geocode Cache ────────────────────────────────────────────────────────────
+const geocodeCache = {};
+
+const geocodeLocation = async (district, city, country) => {
+  const key = `${district},${city},${country}`;
+  if (geocodeCache[key]) return geocodeCache[key];
+  try {
+    let query = encodeURIComponent(`${district}, ${city}, ${country}`);
+    let res   = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`);
+    let data  = await res.json();
+    if (!data || data.length === 0) {
+      query = encodeURIComponent(`${city}, ${country}`);
+      res   = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`);
+      data  = await res.json();
+    }
+    if (data && data.length > 0) {
+      const coords = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+      geocodeCache[key] = coords;
+      return coords;
+    }
+  } catch {}
+  return null;
+};
+
 // ─── Sub Components ───────────────────────────────────────────────────────────
 const SkeletonCard = () => (
   <div className="skeleton-card">
@@ -65,21 +89,51 @@ const PropertyCard = ({ property, onView }) => {
 export default function SearchResults() {
 
   const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const [searchParams]            = useSearchParams();
+  const navigate                  = useNavigate();
   const { results, loading, error, total, search } = useSearch();
-  const [viewMode, setViewMode] = useState('grid');
+  const [geoResults, setGeoResults] = useState([]);
+  const [geoLoading, setGeoLoading] = useState(false);
 
-  // ── جيب الـ params من الـ URL وابحث تلقائي ──
+  // ── Search ──
   useEffect(() => {
-    const countryId  = Number(searchParams.get('countryId'))  || 0;
-    const typeId     = Number(searchParams.get('typeId'))      || 0;
-    const minPrice   = Number(searchParams.get('minPrice'))    || 0;
-    const maxPrice   = Number(searchParams.get('maxPrice'))    || 0;
-    const forRent    = searchParams.get('forRent') === 'true';
-
+    const countryId = Number(searchParams.get('countryId')) || 0;
+    const typeId    = Number(searchParams.get('typeId'))    || 0;
+    const minPrice  = Number(searchParams.get('minPrice'))  || 0;
+    const maxPrice  = Number(searchParams.get('maxPrice'))  || 0;
+    const forRent   = searchParams.get('forRent') === 'true';
     search({ countryId, realStateTypeId: typeId, minPrice, maxPrice, forRent });
   }, [searchParams]);
+
+  // ── Geocode results ──
+  useEffect(() => {
+    if (!results.length) {
+      setGeoResults([]);
+      return;
+    }
+
+    const geocodeAll = async () => {
+      setGeoLoading(true);
+      const geocoded = await Promise.all(
+        results.map(async (property) => {
+          if (property.locationLat && property.locationLng) {
+            return { ...property, lat: property.locationLat, lng: property.locationLng };
+          }
+          const coords = await geocodeLocation(
+            property.district || '',
+            property.city     || '',
+            property.country  || 'Saudi Arabia'
+          );
+          if (coords) return { ...property, lat: coords.lat, lng: coords.lng };
+          return null;
+        })
+      );
+      setGeoResults(geocoded.filter(Boolean));
+      setGeoLoading(false);
+    };
+
+    geocodeAll();
+  }, [results]);
 
   const handleViewProperty = useCallback((id) => {
     navigate(`/properties/property/${id}`);
@@ -101,22 +155,6 @@ export default function SearchResults() {
             </p>
           )}
         </div>
-        <div className="d-flex gap-2 ms-auto">
-          <button
-            className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
-            onClick={() => setViewMode('grid')}
-            title={t('grid_view')}
-          >
-            <i className="fa-solid fa-grip" />
-          </button>
-          <button
-            className={`view-toggle-btn ${viewMode === 'map' ? 'active' : ''}`}
-            onClick={() => setViewMode('map')}
-            title={t('map_view')}
-          >
-            <i className="fa-solid fa-map" />
-          </button>
-        </div>
       </div>
 
       {/* ── Loading ── */}
@@ -134,22 +172,34 @@ export default function SearchResults() {
         </div>
       )}
 
-      {/* ── Grid View ── */}
-      {!loading && !error && viewMode === 'grid' && results.length > 0 && (
-        <div className="sr-grid">
-          {results.map(property => (
-            <PropertyCard
-              key={property.id}
-              property={property}
-              onView={handleViewProperty}
-            />
-          ))}
-        </div>
-      )}
+      {/* ── Split View ── */}
+      {!loading && !error && results.length > 0 && (
+        <div className="sr-split">
 
-      {/* ── Map View ── */}
-      {!loading && !error && viewMode === 'map' && results.length > 0 && (
-        <PropertiesMap properties={results} onView={handleViewProperty} />
+          {/* ── Left: Grid ── */}
+          <div className="sr-split-grid">
+            {results.map(property => (
+              <PropertyCard
+                key={property.id}
+                property={property}
+                onView={handleViewProperty}
+              />
+            ))}
+          </div>
+
+          {/* ── Right: Map ── */}
+          <div className="sr-split-map">
+            {geoLoading ? (
+              <div className="pm-loading">
+                <div className="spinner-border text-primary" />
+                <p>{t('loading_map')}</p>
+              </div>
+            ) : (
+              <PropertiesMap properties={geoResults} onView={handleViewProperty} />
+            )}
+          </div>
+
+        </div>
       )}
 
       {/* ── Empty ── */}

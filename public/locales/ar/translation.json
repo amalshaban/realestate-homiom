@@ -291,6 +291,7 @@
 "visible": "مرئي",
 "hidden": "مخفي",
 "updating_property": "جاري تحديث العقار...",
-"updated_property": "تم تحديث العقار بنجاح!"
+"updated_property": "تم تحديث العقار بنجاح!",
+"loading_map": "جاري تحميل الخريطة..."
 
 }

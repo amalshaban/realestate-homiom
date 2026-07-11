@@ -14,7 +14,7 @@ L.Icon.Default.mergeOptions({
 });
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-export default function PropertiesMap({ properties, onView }) {
+export default function PropertiesMap({ properties, onView, onAreaSelect  }) {
 
   const { t } = useTranslation();
 
@@ -37,7 +37,13 @@ export default function PropertiesMap({ properties, onView }) {
           attribution='&copy; OpenStreetMap contributors'
         />
         {properties.map(property => (
-          <Marker key={property.id} position={[property.lat, property.lng]}>
+            <Marker
+    key={property.id}
+    position={[property.lat, property.lng]}
+    eventHandlers={{
+      click: () => onAreaSelect(property.city),
+    }}
+  >
             <Popup>
               <div className="pm-popup" onClick={() => onView(property.id)}>
                 {(property.mainImageUrl || property.image) && (

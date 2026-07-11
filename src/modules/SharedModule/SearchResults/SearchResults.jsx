@@ -89,11 +89,12 @@ const PropertyCard = ({ property, onView }) => {
 export default function SearchResults() {
 
   const { t } = useTranslation();
-  const [searchParams]            = useSearchParams();
-  const navigate                  = useNavigate();
+  const [searchParams]              = useSearchParams();
+  const navigate                    = useNavigate();
   const { results, loading, error, total, search } = useSearch();
-  const [geoResults, setGeoResults] = useState([]);
-  const [geoLoading, setGeoLoading] = useState(false);
+  const [geoResults,   setGeoResults]   = useState([]);
+  const [geoLoading,   setGeoLoading]   = useState(false);
+  const [selectedCity, setSelectedCity] = useState(null);
 
   // ── Search ──
   useEffect(() => {
@@ -103,15 +104,15 @@ export default function SearchResults() {
     const maxPrice  = Number(searchParams.get('maxPrice'))  || 0;
     const forRent   = searchParams.get('forRent') === 'true';
     search({ countryId, realStateTypeId: typeId, minPrice, maxPrice, forRent });
+    setSelectedCity(null);
   }, [searchParams]);
 
-  // ── Geocode results ──
+  // ── Geocode ──
   useEffect(() => {
     if (!results.length) {
       setGeoResults([]);
       return;
     }
-
     const geocodeAll = async () => {
       setGeoLoading(true);
       const geocoded = await Promise.all(
@@ -131,13 +132,21 @@ export default function SearchResults() {
       setGeoResults(geocoded.filter(Boolean));
       setGeoLoading(false);
     };
-
     geocodeAll();
   }, [results]);
+
+  // ── Filter by selected city ──
+  const filteredResults = selectedCity
+    ? results.filter(p => p.city === selectedCity)
+    : results;
 
   const handleViewProperty = useCallback((id) => {
     navigate(`/properties/property/${id}`);
   }, [navigate]);
+
+  const handleAreaSelect = useCallback((city) => {
+    setSelectedCity(prev => prev === city ? null : city);
+  }, []);
 
   return (
     <div className="sr-page">
@@ -151,10 +160,34 @@ export default function SearchResults() {
           <h2 className="sr-title">{t('search_results')}</h2>
           {!loading && (
             <p className="sr-count">
-              {total} {total === 1 ? t('property') : t('properties')} {t('found')}
+              {filteredResults.length} {filteredResults.length === 1 ? t('property') : t('properties')} {t('found')}
             </p>
           )}
         </div>
+
+        {/* ── Clear Filter ── */}
+        {selectedCity && (
+          <button
+            onClick={() => setSelectedCity(null)}
+            style={{
+              marginLeft: 'auto',
+              background: '#0088BD',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 10,
+              padding: '8px 16px',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            <i className="fa-solid fa-xmark" />
+            {selectedCity} — {t('show_all')}
+          </button>
+        )}
       </div>
 
       {/* ── Loading ── */}
@@ -178,13 +211,20 @@ export default function SearchResults() {
 
           {/* ── Left: Grid ── */}
           <div className="sr-split-grid">
-            {results.map(property => (
-              <PropertyCard
-                key={property.id}
-                property={property}
-                onView={handleViewProperty}
-              />
-            ))}
+            {filteredResults.length > 0 ? (
+              filteredResults.map(property => (
+                <PropertyCard
+                  key={property.id}
+                  property={property}
+                  onView={handleViewProperty}
+                />
+              ))
+            ) : (
+              <div className="sr-empty">
+                <i className="fa-solid fa-house-circle-xmark" />
+                <p>{t('no_properties_found')}</p>
+              </div>
+            )}
           </div>
 
           {/* ── Right: Map ── */}
@@ -195,7 +235,12 @@ export default function SearchResults() {
                 <p>{t('loading_map')}</p>
               </div>
             ) : (
-              <PropertiesMap properties={geoResults} onView={handleViewProperty} />
+              <PropertiesMap
+                properties={geoResults}
+                onView={handleViewProperty}
+                onAreaSelect={handleAreaSelect}
+                selectedCity={selectedCity}
+              />
             )}
           </div>
 

@@ -113,15 +113,30 @@ export default function EditProperty() {
   // ── Fetch Property Data ──
   useEffect(() => {
     const fetchProperty = async () => {
-      if (!id) return;
+      if (!id) {
+        toast.error(t('invalid_property_id'));
+        setLoadingProperty(false);
+        return;
+      }
+
       setLoadingProperty(true);
       try {
-        const response = await axios.get(`${BASE_URL}/properties`, {
-      
+        const response = await axios.get(`${BASE_URL}/agent/property/${id}`, {
           headers: { Authorization: `Bearer ${sessionStorage.token}`, apiKey },
         });
-        const p = response.data.property;
-        if (!p) return;
+console.log(response.data);
+        const payload = response?.data;
+        const propertyData = payload?.property
+          ?? payload?.data?.property
+          ?? payload?.data
+          ?? payload?.result
+          ?? payload;
+        const p = Array.isArray(propertyData) ? propertyData[0] : propertyData;
+
+        if (!p || typeof p !== 'object') {
+          toast.error(t('failed_load_property'));
+          return;
+        }
 
         reset({
           title:               p.title               || '',
@@ -256,34 +271,42 @@ export default function EditProperty() {
     setSubmitting(true);
     const toastId = toast.loading(t('updating_property'));
     try {
-      const formData = new FormData();
-      formData.append('propertyId',          id);
-      formData.append('title',               data.title);
-      formData.append('description',         data.description);
-      formData.append('ForRent',             data.forRent);
-      formData.append('price',               data.price);
-      formData.append('isNegotiable',        data.isNegotiable);
-      formData.append('realStateTypeId',     data.realStateTypeId);
-      formData.append('realStatePurposeId',  data.realStatePurposeId);
-      formData.append('realStateRentTypeId', data.realStateRentTypeId || '');
-      formData.append('countryId',           data.countryId);
-      formData.append('cityId',              data.cityId);
-      formData.append('districtId',          data.districtId);
-      formData.append('contactPhone',        data.contactPhone);
-      formData.append('LocationDiscription', data.locationDescription || '');
-      formData.append('bedrooms',            bedrooms);
-      formData.append('bathrooms',           bathrooms);
-      formData.append('setPropertyVisible',  isVisible);
-      formData.append('setPropertyActive',   isActive);
+      const numericId = Number(id);
+      if (!id || Number.isNaN(numericId)) {
+        toast.update(toastId, {
+          render: t('invalid_property_id'),
+          type: 'error', isLoading: false, autoClose: 3000,
+        });
+        setSubmitting(false);
+        return;
+      }
 
+      const formData = new FormData();
+      formData.append('propertyId', numericId);
+      formData.append('id', numericId);
+      formData.append('title', data.title ?? '');
+      formData.append('description', data.description ?? '');
+      formData.append('forRent', Boolean(data.forRent));
+      formData.append('price', Number(data.price ?? 0));
+      formData.append('isNegotiable', Boolean(data.isNegotiable));
+      formData.append('realStateTypeId', Number(data.realStateTypeId));
+      formData.append('realStatePurposeId', Number(data.realStatePurposeId));
+      formData.append('realStateRentTypeId', Number(data.realStateRentTypeId || 0));
+      formData.append('countryId', Number(data.countryId));
+      formData.append('cityId', Number(data.cityId));
+      formData.append('districtId', Number(data.districtId));
+      formData.append('contactPhone', data.contactPhone ?? '');
+      formData.append('locationDescription', data.locationDescription || '');
+      formData.append('bedrooms', Number(bedrooms ?? 0));
+      formData.append('bathrooms', Number(bathrooms ?? 0));
+      formData.append('setPropertyVisible', Boolean(isVisible));
+      formData.append('setPropertyActive', Boolean(isActive));
+      formData.append('isVisible', Boolean(isVisible));
+      formData.append('isActive', Boolean(isActive));
       if (markerPos) {
         formData.append('locationLat', markerPos[0]);
         formData.append('locationLng', markerPos[1]);
       }
-
-      images.forEach((img, idx) => {
-        formData.append(`images[${idx}].imageUrl`, img);
-      });
 
       await axios.post(AGENT_URLs.UpdateProperty, formData, {
         headers: {
@@ -298,14 +321,15 @@ export default function EditProperty() {
       });
       setTimeout(() => navigate('/agentpannel/properties'), 500);
     } catch (err) {
+      console.error('Update property error:', err.response?.data || err.message);
       toast.update(toastId, {
-        render: err.response?.data?.message || t('failed_update_property'),
+        render: err.response?.data?.message || err.response?.data || t('failed_update_property'),
         type: 'error', isLoading: false, autoClose: 3000,
       });
     } finally {
       setSubmitting(false);
     }
-  }, [id, bedrooms, bathrooms, markerPos, images, isVisible, isActive, navigate, t]);
+  }, [id, bedrooms, bathrooms, markerPos, isVisible, isActive, navigate, t]);
 
   if (loadingProperty) return (
     <div className="add-prop-page">

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { BASE_URL } from '../../../constants/EndPoints.js';
 import useSearch from '../../SharedModule/Search/useSearch.js';
 import PropertiesMap from '../PropertiesMap/PropertiesMap.jsx';
+import ComingSoonPage from '../ComingSoon/ComingSoon.jsx';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const BASE_IMG = BASE_URL;
@@ -147,6 +148,10 @@ export default function SearchResults() {
   const handleAreaSelect = useCallback((city) => {
     setSelectedCity(prev => prev === city ? null : city);
   }, []);
+
+  if (!results.length && !loading && !error) {
+    return <ComingSoonPage title="Search Results" subtitle="No results are available yet for this search." />;
+  }
 
   return (
     <div className="sr-page">

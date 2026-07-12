@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAgentProfile } from '../useAgentData.js';
 import { BASE_URL } from '../../../../constants/EndPoints.js';
 import '../../RealEstateAgents/AgentPannel.css';
+import ComingSoonPage from '../../../SharedModule/ComingSoon/ComingSoon.jsx';
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AgentRightPanel() {
@@ -19,11 +20,7 @@ export default function AgentRightPanel() {
     </div>
   );
 
-  if (error) return (
-    <div className="agent-right-panel">
-      <p style={{ fontSize: '13px', color: '#e74c3c' }}>{t('failed_load_profile')}</p>
-    </div>
-  );
+  if (error) return <ComingSoonPage title="Agent Profile" subtitle="The profile panel is temporarily unavailable." />;
 
   return (
     <div className="agent-right-panel">

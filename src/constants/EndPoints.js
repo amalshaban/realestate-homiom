@@ -35,6 +35,7 @@ export const AGENT_URLs = {
   Properties:       `${BASE_URL}/agent/properties`,
   Stats:            `${BASE_URL}/Agent/Dashboard/Stats`,
   AddProperty:      `${BASE_URL}/Agent/Property/Add`,
+  UpdateProperty:   `${BASE_URL}/Agent/Property/Update`,
   PurchaseRequests: `${BASE_URL}/Agent/PurchaseRequests`,
   PurchaseAccept:   `${BASE_URL}/Agent/PurchaseRequests/Accept`,
   RentalRequests:   `${BASE_URL}/Agent/RentalRequests`,

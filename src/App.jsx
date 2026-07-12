@@ -42,6 +42,8 @@ const SideBarUser        = lazy(() => import("./modules/UsersModule/HomeSeekers/
 
 const SearchResults = lazy(() => import("./modules/SharedModule/SearchResults/SearchResults.jsx"));
 const EditProperty = lazy(() => import("./modules/PropertiesModule/EditProperty/EditProperty.jsx"));
+const Services = lazy(() => import("./modules/SharedModule/Services/Services.jsx"));
+const ScrollToTopPage = lazy(() => import("./modules/SharedModule/ScrollToTop/ScrollToTop.jsx"));
 
 
 
@@ -70,6 +72,9 @@ const routes = createHashRouter([
       { index: true,   element: <Home /> },
       { path: 'home',  element: <Home /> },
       { path: 'search', element: <SearchResults /> },
+      { path: 'search-results', element: <SearchResults /> },
+      { path: 'services', element: <Services /> },
+      { path: 'scroll-to-top', element: <ScrollToTopPage /> },
     ],
   },
 

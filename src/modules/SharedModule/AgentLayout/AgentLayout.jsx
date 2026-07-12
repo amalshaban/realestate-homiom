@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import AgentNav from '../../UsersModule/RealEstateAgents/AgentNav/AgentNav';
+import ComingSoonPage from '../ComingSoon/ComingSoon.jsx';
 
 export default function AgentLayout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -27,4 +28,8 @@ export default function AgentLayout() {
       </div>
     </div>
   );
+}
+
+function SideBar({ collapsed, setCollapsed }) {
+  return <ComingSoonPage title="Agent Sidebar" subtitle="This section is currently being prepared." />;
 }

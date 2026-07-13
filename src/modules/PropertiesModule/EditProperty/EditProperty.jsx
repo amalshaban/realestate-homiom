@@ -124,7 +124,6 @@ export default function EditProperty() {
         const response = await axios.get(`${BASE_URL}/agent/property/${id}`, {
           headers: { Authorization: `Bearer ${sessionStorage.token}`, apiKey },
         });
-console.log(response.data);
         const payload = response?.data;
         const propertyData = payload?.property
           ?? payload?.data?.property
@@ -282,13 +281,16 @@ console.log(response.data);
       }
 
       const formData = new FormData();
+      const boolToString = (value) => (value ? 'true' : 'false');
+
       formData.append('propertyId', numericId);
       formData.append('id', numericId);
       formData.append('title', data.title ?? '');
       formData.append('description', data.description ?? '');
-      formData.append('forRent', Boolean(data.forRent));
+      formData.append('forRent', boolToString(Boolean(data.forRent)));
       formData.append('price', Number(data.price ?? 0));
-      formData.append('isNegotiable', Boolean(data.isNegotiable));
+      formData.append('area', Number(data.area ?? 0));
+      formData.append('isNegotiable', boolToString(Boolean(data.isNegotiable)));
       formData.append('realStateTypeId', Number(data.realStateTypeId));
       formData.append('realStatePurposeId', Number(data.realStatePurposeId));
       formData.append('realStateRentTypeId', Number(data.realStateRentTypeId || 0));
@@ -299,10 +301,11 @@ console.log(response.data);
       formData.append('locationDescription', data.locationDescription || '');
       formData.append('bedrooms', Number(bedrooms ?? 0));
       formData.append('bathrooms', Number(bathrooms ?? 0));
-      formData.append('setPropertyVisible', Boolean(isVisible));
-      formData.append('setPropertyActive', Boolean(isActive));
-      formData.append('isVisible', Boolean(isVisible));
-      formData.append('isActive', Boolean(isActive));
+      formData.append('setPropertyVisible', boolToString(Boolean(isVisible)));
+      formData.append('setPropertyActive', boolToString(Boolean(isActive)));
+      formData.append('isVisible', boolToString(Boolean(isVisible)));
+      formData.append('isActive', boolToString(Boolean(isActive)));
+
       if (markerPos) {
         formData.append('locationLat', markerPos[0]);
         formData.append('locationLng', markerPos[1]);

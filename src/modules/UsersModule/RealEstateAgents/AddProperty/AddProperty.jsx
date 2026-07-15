@@ -56,7 +56,7 @@ const Counter = ({ value, onChange }) => (
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AddProperty() {
 
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const {
     realStateTypes, purposeTypes, rentTypes,
@@ -100,8 +100,9 @@ export default function AddProperty() {
   // ── Reverse Geocoding ──
   const reverseGeocode = useCallback(async (lat, lng) => {
     try {
+      const currentLang = i18n.language?.startsWith('ar') ? 'ar' : 'en';
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=en`
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=${currentLang}`
       );
       const data = await res.json();
       return {
@@ -110,7 +111,46 @@ export default function AddProperty() {
         district: data.address?.suburb || data.address?.district || data.address?.neighbourhood || '',
       };
     } catch { return null; }
+  }, [i18n.language]);
+
+  const normalizeLocationValue = useCallback((value = '') => {
+    return String(value)
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
   }, []);
+
+  const findBestLocationMatch = useCallback((list, target) => {
+    const normalizedTarget = normalizeLocationValue(target);
+    if (!normalizedTarget || !Array.isArray(list) || list.length === 0) return null;
+
+    const scoredMatches = list
+      .map((item) => {
+        const itemName = item?.name || '';
+        const normalizedName = normalizeLocationValue(itemName);
+        if (!normalizedName) return null;
+
+        let score = 0;
+        if (normalizedName === normalizedTarget) score = 100;
+        else if (normalizedName.includes(normalizedTarget) || normalizedTarget.includes(normalizedName)) score = 80;
+        else {
+          const targetTokens = normalizedTarget.split(' ');
+          const nameTokens = normalizedName.split(' ');
+          const overlap = targetTokens.filter((token) => nameTokens.includes(token)).length;
+          if (overlap > 0) score = 40 + overlap * 10;
+        }
+
+        return score > 0 ? { item, score } : null;
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.score - a.score);
+
+    if (scoredMatches.length === 0) return list.length === 1 ? list[0] : null;
+    return scoredMatches[0].score >= 40 ? scoredMatches[0].item : (list.length === 1 ? list[0] : null);
+  }, [normalizeLocationValue]);
 
   // ── Map Click ──
   const handleMapClick = useCallback(async (lat, lng) => {
@@ -118,10 +158,10 @@ export default function AddProperty() {
     const location = await reverseGeocode(lat, lng);
     if (!location) return;
 
-    const matchedCountry = countries.find(c =>
-      c.name.toLowerCase().includes(location.country.toLowerCase()) ||
-      location.country.toLowerCase().includes(c.name.toLowerCase())
-    );
+    const matchedCountry = findBestLocationMatch(countries, location.country);
+    const isArabic = i18n.language?.startsWith('ar');
+    const locationLabelPrefix = isArabic ? 'المدينة' : 'City';
+    const locationLabelDistrict = isArabic ? 'الحي' : 'District';
 
     if (matchedCountry) {
       setValue('countryId', String(matchedCountry.id));
@@ -133,10 +173,7 @@ export default function AddProperty() {
           { headers: { Authorization: `Bearer ${sessionStorage.token}`, apiKey } }
         );
         const citiesList = cityRes.data || [];
-        const matchedCity = citiesList.find(c =>
-          c.name.toLowerCase().includes(location.city.toLowerCase()) ||
-          location.city.toLowerCase().includes(c.name.toLowerCase())
-        );
+        const matchedCity = findBestLocationMatch(citiesList, location.city);
 
         if (matchedCity) {
           setValue('cityId', String(matchedCity.id));
@@ -148,18 +185,23 @@ export default function AddProperty() {
               { headers: { Authorization: `Bearer ${sessionStorage.token}`, apiKey } }
             );
             const districtsList = distRes.data || [];
-            const matchedDistrict = districtsList.find(d =>
-              d.name.toLowerCase().includes(location.district.toLowerCase()) ||
-              location.district.toLowerCase().includes(d.name.toLowerCase())
-            );
-            if (matchedDistrict) setValue('districtId', String(matchedDistrict.id));
+            const matchedDistrict = findBestLocationMatch(districtsList, location.district);
+            if (matchedDistrict) {
+              setValue('districtId', String(matchedDistrict.id));
+            } else if (districtsList.length === 1) {
+              setValue('districtId', String(districtsList[0].id));
+            }
           }, 500);
         }
       }, 500);
     }
 
-    setValue('locationDescription', `${location.district}, ${location.city}, ${location.country}`);
-  }, [countries, fetchCities, fetchDistricts, reverseGeocode, setValue]);
+    const fallbackDescription = isArabic
+      ? `${t('district')}, ${t('city')}, ${t('country')}`
+      : `${t('district')}, ${t('city')}, ${t('country')}`;
+
+    setValue('locationDescription', fallbackDescription);
+  }, [countries, fetchCities, fetchDistricts, findBestLocationMatch, reverseGeocode, setValue]);
 
   // ── Current Location ──
   const handleUseCurrentLocation = useCallback(() => {

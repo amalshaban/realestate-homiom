@@ -2,6 +2,7 @@
 .agent-panel-page {
   height: calc(100vh - 60px);
   overflow: hidden;
+  font-weight: 700;
 }
 
 .agent-panel-sidebar {
@@ -11,12 +12,14 @@
   overflow-y: auto;
   border-right: 1px solid #f0f0f0;
   background: #fff;
+  font-weight: 700;
 }
 
 .agent-panel-content {
   height: calc(100vh - 60px);
   overflow-y: auto;
   background: #f9fafb;
+  font-weight: 700;
 }
 
 .agent-panel-right {
@@ -26,18 +29,36 @@
   overflow-y: auto;
   border-left: 1px solid #f0f0f0;
   background: #fff;
+  font-weight: 700;
 }
 
 /* ── Scrollbar ── */
 .agent-panel-sidebar::-webkit-scrollbar,
 .agent-panel-content::-webkit-scrollbar,
-.agent-panel-right::-webkit-scrollbar { width: 4px; }
+.agent-panel-right::-webkit-scrollbar {
+  width: 8px;
+}
+
+.agent-panel-sidebar::-webkit-scrollbar-track,
+.agent-panel-content::-webkit-scrollbar-track,
+.agent-panel-right::-webkit-scrollbar-track {
+  background: #f1f3f5;
+  border-radius: 999px;
+}
 
 .agent-panel-sidebar::-webkit-scrollbar-thumb,
 .agent-panel-content::-webkit-scrollbar-thumb,
 .agent-panel-right::-webkit-scrollbar-thumb {
-  background: #e0e0e0;
-  border-radius: 4px;
+  background: #6b7280;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.agent-panel-sidebar::-webkit-scrollbar-thumb:hover,
+.agent-panel-content::-webkit-scrollbar-thumb:hover,
+.agent-panel-right::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
 }
 
 /*AGENTNAVBAR*/
